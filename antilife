@@ -48,13 +48,12 @@ local function addBeamToEachAnt(ant)
 		beam.Texture = "rbxassetid://5221479348"
 		beam.TextureLength = 2
 		beam.TextureMode = Enum.TextureMode.Static
-		beam.Width0 = 10
 		if ant.Character.Parent.Parent.Name == "Yellow Crazy Ant" then
-			beam.Color = Color3.fromRGB(255, 235, 91)
+			beam.Color = ColorSequence.new(Color3.fromRGB(255, 235, 91),Color3.fromRGB(124, 116, 64))
 		elseif ant.Character.Parent.Parent.Name == "Fire Ant" then
-			beam.Color = Color3.fromRGB(152, 49, 42)
+			beam.Color = ColorSequence.new(Color3.fromRGB(152, 49, 42),Color3.fromRGB(67, 31, 26))
 		elseif ant.Character.Parent.Parent.Name == "Carpenter Ant" then
-			beam.Color = Color3.fromRGB(39, 39, 39)
+			beam.Color = ColorSequence.new(Color3.fromRGB(133, 133, 133),Color3.fromRGB(39,39,39))
 		end
 		beam.Parent = workspace
 	end
