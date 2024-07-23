@@ -1,0 +1,85 @@
+local ids = {
+    139969723,
+    18232937848,
+    17639022646,
+    7190157716,
+    14067926774,
+    14014580386,
+    996876240,
+    13684437332,
+    14308133896,
+    7231245988,
+    50361667,
+    303181487,
+    15289521031,
+    15466531423,
+    5636195341,
+    1155798798,
+    2186448679,
+    17314556246,
+    13654972809,
+    14066709347,
+    17413493840,
+    17413496072,
+    4920216,
+    9494747435,
+    468966043,
+    15708535410,
+    13214540881,
+    14026728261,
+    15813149247,
+    379928822,
+    999318647,
+    6193066,
+    14038006596,
+    199536575,
+    12498045283,
+    18368700991,
+    487662568,
+    121693639,
+    14699530451,
+    14637831502,
+    1467863415,
+    290261083,
+    5744076832,
+    8839408360,
+    11972773703,
+    12548679775,
+    13422218772,
+    14922898556,
+    5582681,
+    29340101,
+    7964466133,
+    12874476003,
+    14986594482,
+}
+
+for _,player in pairs(game.Players:GetPlayers()) do
+    player.Chatted:Connect(function(msg)
+        local args = {
+    [1] = "Update",
+    [2] = {
+        ["DescriptionText"] = msg,
+        ["ImageId"] = ids[math.random(1,#ids)]
+    }
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("CustomiseBooth"):FireServer(unpack(args))
+
+    end)
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+     player.Chatted:Connect(function(msg)
+        local args = {
+    [1] = "Update",
+    [2] = {
+        ["DescriptionText"] = msg,
+        ["ImageId"] = ids[math.random(1,#ids)]
+    }
+}
+
+game:GetService("ReplicatedStorage"):WaitForChild("CustomiseBooth"):FireServer(unpack(args))
+
+    end)
+end)
