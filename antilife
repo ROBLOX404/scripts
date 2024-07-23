@@ -47,6 +47,18 @@ local spiderCount = newStat()
 --local eggsCount = newStat()
 --local larvaesCount = newStat()
 
+for _,player in pairs(game.Players:GetPlayers()) do
+	player.Chatted:Connect(function(msg)
+		game.Chat:Chat(player.Character,msg)
+	end)
+end
+
+game.Players.PlayerAdded:Connect(function(player)
+	player.Chatted:Connect(function(msg)
+		game.Chat:Chat(player.Character,msg)
+	end)
+end)
+
 runService.RenderStepped:Connect(function()
 	fpsCount += 1
 end)
