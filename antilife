@@ -48,7 +48,6 @@ local function addBeamToEachAnt(ant)
 		beam.Texture = "rbxassetid://5221479348"
 		beam.TextureLength = 2
 		beam.TextureMode = Enum.TextureMode.Static
-		beam.Transparency = 0.9
 		beam.Width0 = 10
 		if ant.Character.Parent.Parent.Name == "Yellow Crazy Ant" then
 			beam.Color = Color3.fromRGB(255, 235, 91)
