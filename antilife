@@ -1,0 +1,85 @@
+-- Values --
+
+local runService = game:GetService("RunService")
+
+local player = game.Players.LocalPlayer
+
+local UI = Instance.new("ScreenGui",player.PlayerGui)
+local frame = Instance.new("Frame",UI)
+frame.BackgroundColor3 = Color3.fromRGB(64,64,64)
+frame.BackgroundTransparency = 0.5
+frame.Position = UDim2.new(0,30,0,30)
+frame.Size = UDim2.new(0,225,0,170)
+local uicorner = Instance.new("UICorner",frame)
+local uilistlayout = Instance.new("UIListLayout",frame)
+uilistlayout.Padding = UDim.new(0.01,0)
+local uipadding = Instance.new("UIPadding",frame)
+uipadding.PaddingBottom = UDim.new(0.05,0)
+uipadding.PaddingLeft = UDim.new(0.05,0)
+uipadding.PaddingTop = UDim.new(0.05,0)
+local highlight = Instance.new("Highlight",workspace.Ant)
+
+local fpsCount = 0
+
+-- Functions --
+
+local function newStat()
+	local textlabel = Instance.new("TextLabel")
+	textlabel.BackgroundTransparency = 1
+	textlabel.Size = UDim2.new(1,0,0.117,0)
+	textlabel.TextScaled = true
+	textlabel.TextXAlignment = Enum.TextXAlignment.Left
+	textlabel.TextStrokeTransparency = 0
+	textlabel.Text = "???"
+	textlabel.Parent = frame
+	textlabel.TextColor3 = Color3.fromRGB(255,255,255)
+	return textlabel
+end
+
+-- Script --
+
+local fps = newStat()
+local serverSize = newStat()
+local yellowAnt = newStat()
+local redAnt = newStat()
+local blackAnt = newStat()
+local spiderCount = newStat()
+--local eggsCount = newStat()
+--local larvaesCount = newStat()
+
+runService.RenderStepped:Connect(function()
+	fpsCount += 1
+end)
+
+while task.wait(1) do
+	fps.Text = "FPS: "..fpsCount
+	fpsCount = 0
+	serverSize.Text = "Server Size: "..#game:GetService("Players"):GetPlayers()
+	local count = 0
+	for _,yellow in pairs(workspace.Ant["Yellow Crazy Ant"]:GetChildren()) do
+		if yellow.Name ~= "Eggs" then
+			count += #yellow:GetChildren()
+		end
+	end
+	yellowAnt.Text = "Yellow Ant Colony Size: "..count
+	local count = 0
+	for _,red in pairs(workspace.Ant["Fire Ant"]:GetChildren()) do
+		if red.Name ~= "Eggs" then
+			count += #red:GetChildren()
+		end
+	end
+	redAnt.Text = "Red Ant Colony Size: "..count
+	local count = 0
+	for _,black in pairs(workspace.Ant["Carpenter Ant"]:GetChildren()) do
+		if black.Name ~= "Eggs" then
+			count += #black:GetChildren()
+		end
+	end
+	blackAnt.Text = "Black Ant Colony Size: "..count
+	local count = 0
+	for _,spider in pairs(workspace.Special:GetChildren()) do
+		count += #spider:FindFirstChildWhichIsA("Model"):GetChildren()
+	end
+	spiderCount.Text = "Spider Count: "..count
+	
+end
