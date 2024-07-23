@@ -18,6 +18,8 @@ uipadding.PaddingBottom = UDim.new(0.05,0)
 uipadding.PaddingLeft = UDim.new(0.05,0)
 uipadding.PaddingTop = UDim.new(0.05,0)
 local highlight = Instance.new("Highlight",workspace.Ant)
+local attachment = Instance.new("Attachment")
+attachment.Parent = player.Character.PrimaryPart
 
 local fpsCount = 0
 
@@ -36,6 +38,29 @@ local function newStat()
 	return textlabel
 end
 
+local function addBeamToEachAnt(ant)
+	if ant.Character and ant.Character.PrimaryPart then
+		local secondAttachment = Instance.new("Attachment")
+		secondAttachment.Parent = ant.Character.PrimaryPart
+		local beam = Instance.new("Beam")
+		beam.LightEmission = 0
+		beam.LightInfluence = 0
+		beam.Texture = "rbxassetid://5221479348"
+		beam.TextureLength = 2
+		beam.TextureMode = Enum.TextureMode.Static
+		beam.Transparency = 0.9
+		beam.Width0 = 10
+		if ant.Character.Parent.Parent.Name == "Yellow Crazy Ant" then
+			beam.Color = Color3.fromRGB(255, 235, 91)
+		elseif ant.Character.Parent.Parent.Name == "Fire Ant" then
+			beam.Color = Color3.fromRGB(152, 49, 42)
+		elseif ant.Character.Parent.Parent.Name == "Carpenter Ant" then
+			beam.Color = Color3.fromRGB(39, 39, 39)
+		end
+		beam.Parent = workspace
+	end
+end
+
 -- Script --
 
 local fps = newStat()
@@ -51,11 +76,15 @@ for _,player in pairs(game.Players:GetPlayers()) do
 	player.Chatted:Connect(function(msg)
 		game.Chat:Chat(player.Character,msg)
 	end)
+	addBeamToEachAnt(player)
 end
 
 game.Players.PlayerAdded:Connect(function(player)
 	player.Chatted:Connect(function(msg)
 		game.Chat:Chat(player.Character,msg)
+	end)
+	player.CharacterAdded:Connect(function()
+		addBeamToEachAnt(player)
 	end)
 end)
 
@@ -93,5 +122,5 @@ while task.wait(1) do
 		count += #spider:FindFirstChildWhichIsA("Model"):GetChildren()
 	end
 	spiderCount.Text = "Spider Count: "..count
-	
+
 end
