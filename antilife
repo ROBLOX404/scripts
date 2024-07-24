@@ -42,7 +42,7 @@ local function addBeamToEachAnt(ant)
 	if ant.Character and ant.Character.PrimaryPart then
 		print("a")
 		local secondAttachment = Instance.new("Attachment")
-		secondAttachment.Parent = ant.Character.PrimaryPart
+		secondAttachment.Parent = ant.Character.HumanoidRootPart
 		local beam = Instance.new("Beam")
 		beam.LightEmission = 0
 		beam.LightInfluence = 0
