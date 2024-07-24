@@ -59,6 +59,10 @@ local function addBeamToEachAnt(ant)
 			beam.Color = ColorSequence.new(Color3.fromRGB(133, 133, 133),Color3.fromRGB(39,39,39))
 		end
 		beam.Parent = workspace
+		repeat
+			wait()
+			beam.Attachment1 = secondattachment
+		until beam.Attachment1 == secondattachment
 	end
 end
 
