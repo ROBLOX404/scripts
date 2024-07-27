@@ -41,6 +41,7 @@ end
 local function addBeamToEachAnt(ant)
 	if ant.Character and ant.Character.PrimaryPart then
 		print("a")
+
 		local secondAttachment = Instance.new("Attachment")
 		secondAttachment.Parent = ant.Character.HumanoidRootPart
 		local beam = Instance.new("Beam")
@@ -50,7 +51,7 @@ local function addBeamToEachAnt(ant)
 		beam.TextureLength = 2
 		beam.TextureMode = Enum.TextureMode.Static
 		beam.Attachment0 = attachment
-		beam.Attachment1 = secondattachment
+		beam.Attachment1 = secondAttachment
 		if ant.Character.Parent.Parent.Name == "Yellow Crazy Ant" then
 			beam.Color = ColorSequence.new(Color3.fromRGB(255, 235, 91),Color3.fromRGB(124, 116, 64))
 		elseif ant.Character.Parent.Parent.Name == "Fire Ant" then
@@ -59,10 +60,6 @@ local function addBeamToEachAnt(ant)
 			beam.Color = ColorSequence.new(Color3.fromRGB(133, 133, 133),Color3.fromRGB(39,39,39))
 		end
 		beam.Parent = workspace
-		repeat
-			wait()
-			beam.Attachment1 = secondattachment
-		until beam.Attachment1 == secondattachment
 	end
 end
 
