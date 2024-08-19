@@ -1,0 +1,293 @@
+
+-- Values --
+
+local userInputService = game:GetService("UserInputService")
+
+local httpService = game:GetService("HttpService")
+
+local dataTable = nil
+
+local encodeDataTable = {}
+local selectingPixels = false
+
+local dragging,dragInput,dragstart,startPos
+
+local selectedColor = 1
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local UI = Instance.new("ScreenGui",player.PlayerGui)
+local Holder = Instance.new("Frame",UI)
+Holder.AnchorPoint = Vector2.new(0.5,0.5)
+Holder.BackgroundTransparency = 1
+Holder.Position = UDim2.new(0.5,0,0.5,0)
+Holder.Size = UDim2.new(1,0,1,0)
+local aspectRatio = Instance.new("UIAspectRatioConstraint",Holder)
+local MainFrame = Instance.new("Frame",Holder)
+MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+MainFrame.Position = UDim2.new(0.5,0,0.5,0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(52,52,52)
+MainFrame.Size = UDim2.new(0.5,0,0.3,0)
+local TopBar = Instance.new("Frame",MainFrame)
+TopBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TopBar.Size = UDim2.new(1,0,0.1,0)
+local TopBarIcon = Instance.new("ImageLabel",TopBar)
+TopBarIcon.BackgroundTransparency = 1
+TopBarIcon.Size = UDim2.new(1,0,1,0)
+TopBarIcon.Image = "rbxassetid://18373238600"
+local aspectRatio = Instance.new("UIAspectRatioConstraint",TopBarIcon)
+local Title = Instance.new("TextLabel",TopBar)
+Title.AnchorPoint = Vector2.new(0.5,0.5)
+Title.BackgroundTransparency = 1
+Title.Position = UDim2.new(0.5,0,0.5,0)
+Title.Size = UDim2.new(0.85,0,0.7,0)
+Title.Text = "Color Place PaintBot V1"
+Title.Font = Enum.Font.SourceSansBold
+Title.TextScaled = true
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+local SideBar = Instance.new("Frame",MainFrame)
+SideBar.AnchorPoint = Vector2.new(0,1)
+SideBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+SideBar.Position = UDim2.new(0,0,1,0)
+SideBar.Size = UDim2.new(0.25,0,0.9,0)
+local uilistLayout = Instance.new("UIListLayout",SideBar)
+uilistLayout.Padding = UDim.new(0,2)
+local uipadding = Instance.new("UIPadding",SideBar)
+uipadding.PaddingTop = UDim.new(0,2)
+uipadding.PaddingLeft = UDim.new(0,2)
+uipadding.PaddingRight = UDim.new(0,2)
+uipadding.PaddingBottom = UDim.new(0,2)
+
+-- Functions --
+
+local function paintPixel(chunk,pixel,color)
+	local args = {
+		[1] = workspace:WaitForChild("Chunks"):WaitForChild(chunk):WaitForChild(pixel),
+		[2] = tonumber(color)
+	}
+
+	game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ChangeColor"):FireServer(unpack(args))
+end
+
+local function newPage()
+	local Page = Instance.new("Frame",MainFrame)
+	Page.Name = "Page"
+	Page.Visible = false
+	Page.BackgroundTransparency = 1
+	Page.AnchorPoint = Vector2.new(1,1)
+	Page.Position = UDim2.new(1,0,1,0)
+	Page.Size = UDim2.new(0.75,0,0.9,0)
+	return Page
+end
+
+local function newButton(buttonText,page)
+	local button = Instance.new("TextButton",SideBar)
+	button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	button.Size = UDim2.new(1,0,0.15,0)
+	button.Text = ""
+	local label = Instance.new("TextLabel",button)
+	label.BackgroundTransparency = 1
+	label.AnchorPoint = Vector2.new(0.5,0.5)
+	label.Position = UDim2.new(0.5,0,0.5,0)
+	label.Size = UDim2.new(0.95,0,0.6,0)
+	label.TextScaled = true
+	label.Text = buttonText
+	label.TextColor3 = Color3.fromRGB(255,255,255)
+	button.MouseButton1Down:Connect(function()
+		for _,page in pairs(MainFrame:GetChildren()) do
+			if page.Name == "Page" then
+				page.Visible = false
+			end
+		end
+		page.Visible = true
+	end)
+	return button
+end
+
+local function update(input)
+	local delta = input.Position - dragStart
+	MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+-- Script --
+
+local homePage = newPage()
+local label = Instance.new("TextLabel",homePage)
+label.BackgroundTransparency = 1
+label.AnchorPoint = Vector2.new(0.5,0.5)
+label.Position = UDim2.new(0.5,0,0.5,0)
+label.Size = UDim2.new(0.95,0,0.9,0)
+label.TextScaled = true
+label.TextXAlignment = Enum.TextXAlignment.Left
+label.Text = [[
+Color Place PaintBot is designed to automate pixel placement/place pixels for you. Best both on computers and phones. Color Place PaintBot is not responsible if you get caught. Use this at your own risk.
+
+The panel is still work in progress, This is not the final product. Stay tuned.
+
+- Developer
+]]
+label.TextColor3 = Color3.fromRGB(255,255,255)
+homePage.Visible = true
+local homeButton = newButton("Home",homePage)
+local botPage = newPage()
+local CodeInput = Instance.new("TextBox",botPage)
+CodeInput.AnchorPoint = Vector2.new(0.5,0.5)
+CodeInput.BackgroundColor3 = Color3.fromRGB(42,42,42)
+CodeInput.Position = UDim2.new(0.5, 0,0.427, 0)
+CodeInput.Size = UDim2.new(0.95,0,0.777,0)
+CodeInput.ClearTextOnFocus = false
+CodeInput.MultiLine = true
+CodeInput.Text = ""
+CodeInput.PlaceholderText = "Paste your code here."
+CodeInput.TextColor3 = Color3.fromRGB(0, 233, 10)
+CodeInput.Font = Enum.Font.Code
+CodeInput.TextSize = 15
+CodeInput.TextXAlignment = Enum.TextXAlignment.Left
+CodeInput.TextYAlignment = Enum.TextYAlignment.Top
+CodeInput.ClipsDescendants = true
+local executeButton = Instance.new("TextButton",botPage)
+executeButton.AnchorPoint = Vector2.new(0,1)
+executeButton.BackgroundColor3 = Color3.fromRGB(21, 28, 62)
+executeButton.Position = UDim2.new(0,0,1,0)
+executeButton.Size = UDim2.new(0.5,0,0.1,0)
+executeButton.TextScaled = true
+executeButton.Font = Enum.Font.Sarpanch
+executeButton.Text = "EXECUTE"
+executeButton.TextColor3 = Color3.fromRGB(255,255,255)
+local haltButton = Instance.new("TextButton",botPage)
+haltButton.AnchorPoint = Vector2.new(1,1)
+haltButton.BackgroundColor3 = Color3.fromRGB(21, 28, 62)
+haltButton.Position = UDim2.new(1,0,1,0)
+haltButton.Size = UDim2.new(0.5,0,0.1,0)
+haltButton.TextScaled = true
+haltButton.Font = Enum.Font.Sarpanch
+haltButton.Text = "HALT"
+haltButton.TextColor3 = Color3.fromRGB(255,255,255)
+newButton("PaintBot",botPage)
+executeButton.MouseButton1Down:Connect(function()
+	local s,e = pcall(function()
+		local code = httpService:JSONDecode(CodeInput.Text)
+		dataTable = code
+	end)
+	if e then
+		warn(e)
+	end
+end)
+haltButton.MouseButton1Down:Connect(function()
+	dataTable = nil
+end)
+
+local encoderPage = newPage()
+local EncoderInput = Instance.new("TextBox",encoderPage)
+EncoderInput.AnchorPoint = Vector2.new(0.5,0.5)
+EncoderInput.BackgroundColor3 = Color3.fromRGB(42,42,42)
+EncoderInput.Position = UDim2.new(0.5, 0,0.427, 0)
+EncoderInput.Size = UDim2.new(0.95,0,0.777,0)
+EncoderInput.ClearTextOnFocus = false
+EncoderInput.MultiLine = true
+EncoderInput.Text = ""
+EncoderInput.PlaceholderText = ""
+EncoderInput.TextEditable = false
+EncoderInput.TextColor3 = Color3.fromRGB(0, 233, 10)
+EncoderInput.Font = Enum.Font.Code
+EncoderInput.TextSize = 15
+EncoderInput.TextXAlignment = Enum.TextXAlignment.Left
+EncoderInput.TextYAlignment = Enum.TextYAlignment.Top
+EncoderInput.ClipsDescendants = true
+local selectButton = Instance.new("TextButton",encoderPage)
+selectButton.AnchorPoint = Vector2.new(0,1)
+selectButton.BackgroundColor3 = Color3.fromRGB(21, 28, 62)
+selectButton.Position = UDim2.new(0,0,1,0)
+selectButton.Size = UDim2.new(0.5,0,0.1,0)
+selectButton.TextScaled = true
+selectButton.Font = Enum.Font.Sarpanch
+selectButton.Text = "SELECT PIXELS"
+selectButton.TextColor3 = Color3.fromRGB(255,255,255)
+local copyButton = Instance.new("TextButton",encoderPage)
+copyButton.AnchorPoint = Vector2.new(1,1)
+copyButton.BackgroundColor3 = Color3.fromRGB(21, 28, 62)
+copyButton.Position = UDim2.new(1,0,1,0)
+copyButton.Size = UDim2.new(0.5,0,0.1,0)
+copyButton.TextScaled = true
+copyButton.Font = Enum.Font.Sarpanch
+copyButton.Text = "COPY TO CLIPBOARD"
+copyButton.TextColor3 = Color3.fromRGB(255,255,255)
+newButton("JSON Encoder",encoderPage)
+copyButton.MouseButton1Down:Connect(function()
+	setclipboard(EncoderInput.Text)
+end)
+selectButton.MouseButton1Down:Connect(function()
+	selectingPixels = not selectingPixels
+	if selectingPixels then
+		selectButton.Text = "STOP"
+	else
+		if encodeDataTable then
+			EncoderInput.Text = httpService:JSONEncode(encodeDataTable)
+			encodeDataTable = {}
+		end
+		selectButton.Text = "SELECT PIXELS"
+	end
+end)
+
+mouse.Button1Down:Connect(function()
+	if selectingPixels then
+		local target = mouse.Target
+		if target and target.Parent and target.Parent.Parent and target.Parent.Parent.Name == "Chunks" then
+			selectedColor = 1
+			for _,frame in pairs(player.PlayerGui.PlacePane.PlacePane.wrapper.container.ColorSelection.wrapper.contents:GetChildren()) do
+				if frame.Name == "ColorButton" then
+					print(frame.wrapper.container.inner.Size.X.Scale)
+					if math.round(frame.wrapper.container.inner.Size.X.Scale*100)/100 == 0.85 then
+						selectedColor = frame.LayoutOrder
+					end
+				end
+			end
+			local newTable = {
+				["Chunk"] = target.Parent.Name,
+				["Pixel"] = target.Name,
+				["Color"] = selectedColor
+			}
+			if newTable then
+				table.insert(encodeDataTable,newTable)
+			end
+		end
+	end
+end)
+
+TopBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+TopBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+
+userInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		update(input)
+	end
+end)
+
+spawn(function()
+	while wait(1) do
+		if dataTable then
+			for _,pixel in pairs(dataTable) do
+				paintPixel(pixel.Chunk,pixel.Pixel,pixel.Color)
+			end
+		end
+	end
+end)
