@@ -60,6 +60,11 @@ uipadding.PaddingLeft = UDim.new(0,2)
 uipadding.PaddingRight = UDim.new(0,2)
 uipadding.PaddingBottom = UDim.new(0,2)
 
+local highlightedPixels = Instance.new("Model",workspace)
+local highlight = Instance.new("Highlight",highlightedPixels)
+highlight.FillTransparency = 0.6
+
+
 -- Functions --
 
 local function paintPixel(chunk,pixel,color)
@@ -226,6 +231,7 @@ selectButton.MouseButton1Down:Connect(function()
 		if encodeDataTable then
 			EncoderInput.Text = httpService:JSONEncode(encodeDataTable)
 			encodeDataTable = {}
+			highlightedPixels:ClearAllChildren()
 		end
 		selectButton.Text = "SELECT PIXELS"
 	end
@@ -235,6 +241,7 @@ mouse.Button1Down:Connect(function()
 	if selectingPixels then
 		local target = mouse.Target
 		if target and target.Parent and target.Parent.Parent and target.Parent.Parent.Name == "Chunks" then
+			target:Clone().Parent = highlightedPixels
 			selectedColor = 1
 			for _,frame in pairs(player.PlayerGui.PlacePane.PlacePane.wrapper.container.ColorSelection.wrapper.contents:GetChildren()) do
 				if frame.Name == "ColorButton" then
