@@ -232,7 +232,7 @@ selectButton.MouseButton1Down:Connect(function()
 			EncoderInput.Text = httpService:JSONEncode(encodeDataTable)
 			encodeDataTable = {}
 			for _,pixel in pairs(highlightedPixels:GetChildren()) do
-				if pixel.ClassName == "Part" then
+				if pixel:IsA("Part") then
 					pixel:Destroy()
 				end
 			end
