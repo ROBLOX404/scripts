@@ -231,7 +231,11 @@ selectButton.MouseButton1Down:Connect(function()
 		if encodeDataTable then
 			EncoderInput.Text = httpService:JSONEncode(encodeDataTable)
 			encodeDataTable = {}
-			highlightedPixels:ClearAllChildren()
+			for _,pixel in pairs(highlightedPixels:GetChildren()) do
+				if pixel.ClassName == "Part" then
+					pixel:Destroy()
+				end
+			end
 		end
 		selectButton.Text = "SELECT PIXELS"
 	end
