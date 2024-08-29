@@ -270,6 +270,7 @@ if _G.Enabled == nil then
 		notificationFrame.ClipsDescendants = true
 		local notification = Instance.new("Frame",notificationFrame)
 		notification.BackgroundColor3 = color
+		notification.AnchorPoint = Vector2.new(0.5,-1)
 		notification.Position = UDim2.new(0.5,0,-1,0)
 		notification.Size = UDim2.new(1,0,1,0)
 		local UICorner = Instance.new("UICorner",notification)
@@ -289,6 +290,7 @@ if _G.Enabled == nil then
 		textLabel.TextScaled = true
 		--tween(notification,0.5,{AnchorPoint = Vector2.new(0,0)})
 		tween(notification,0.5,{Position = UDim2.new(0.5,0,0.5,0)})
+		tween(notification,0.5,{AnchorPoint = Vector2.new(0.5,0.5)})
 		wait(duration)
 		tween(notification,0.5,{Position = UDim2.new(0.5,0,-1,0)})
 		wait(0.5)
@@ -482,21 +484,31 @@ if _G.Enabled == nil then
 		
 		local newTable = table.clone(selectModeReturnTable)
 		
+		local clicks = 0
+		
 		local SelectionTable = Instance.new("Frame",page)
+		
+		local function contextMenuPopUp()
+			clearContextMenuShortcuts()
+			ContextMenu.Position = UDim2.new(0,mouse.X,0,mouse.Y)
+			ContextMenu.Visible = true
+			newContextMenuShortcut("Copy").MouseButton1Down:Connect(function()
+				setclipboard(HttpService:JSONEncode(newTable))
+			end)
+			newContextMenuShortcut("Delete").MouseButton1Down:Connect(function()
+				SelectionTable:Destroy()
+				page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
+			end)
+		end
+		
 		SelectionTable.BackgroundColor3 = Color3.fromRGB(62,62,62)
 		SelectionTable.Size = UDim2.new(1,0,0,50)
 		SelectionTable.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				clicks += 1
+			end
 			if input.UserInputType == Enum.UserInputType.MouseButton2 then
-				clearContextMenuShortcuts()
-				ContextMenu.Position = UDim2.new(0,mouse.X,0,mouse.Y)
-				ContextMenu.Visible = true
-				newContextMenuShortcut("Copy").MouseButton1Down:Connect(function()
-					setclipboard(HttpService:JSONEncode(newTable))
-				end)
-				newContextMenuShortcut("Delete").MouseButton1Down:Connect(function()
-					SelectionTable:Destroy()
-					page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
-				end)
+				contextMenuPopUp()
 			end
 		end)
 		local UICorner = Instance.new("UICorner",SelectionTable)
@@ -572,6 +584,15 @@ if _G.Enabled == nil then
 			SelectionTable:Destroy()
 			page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
 		end)
+		while wait(0.5) do
+			if exit then
+				break
+			end
+			if clicks == 2 then
+				contextMenuPopUp()
+			end
+			clicks = 0
+		end
 		return newTable
 	end
 
