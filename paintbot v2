@@ -1,0 +1,1058 @@
+if _G.Enabled == nil then
+
+	_G.Enabled = true
+
+	-- Values --
+
+	local TweenService = game:GetService("TweenService")
+	local HttpService = game:GetService("HttpService")
+	local UserInputService = game:GetService("UserInputService")
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	
+	local highlightFolder = Instance.new("Model",workspace)
+	local highlight = Instance.new("Highlight",workspace)
+	highlight.Adornee = highlightFolder
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+
+	local player = game.Players.LocalPlayer
+	local mouse = player:GetMouse()
+	
+	local codeToRun = nil
+	local selectModes = {
+		["Click"] = false,
+		["Brush"] = false,
+		["Box"] = false,
+		["Picture"] = false,
+	}
+	local selectModeReturnTable = {}
+	local selectedColor = 1
+	local holding = false
+	local exit = false
+
+	local dragging,dragInput,dragstart,startPos
+	
+	local UI = Instance.new("ScreenGui",player.PlayerGui)
+	local PanelHolder = Instance.new("Frame",UI)
+	PanelHolder.BackgroundTransparency = 1
+	PanelHolder.Size = UDim2.new(1,0,1,0)
+	local Panel = Instance.new("Frame",PanelHolder)
+	Panel.AnchorPoint = Vector2.new(0.5,0.5)
+	Panel.BackgroundColor3 = Color3.fromRGB(62,62,62)
+	Panel.Position = UDim2.new(0.5,0,0.5,0)
+	Panel.Size = UDim2.new(0,600,0,300)
+	local UIStroke = Instance.new("UIStroke",Panel)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local UICorner = Instance.new("UICorner",Panel)
+	UICorner.CornerRadius = UDim.new(0,10)
+	local PanelShadowHolder = Instance.new("Frame",PanelHolder)
+	PanelShadowHolder.BackgroundTransparency = 1
+	PanelShadowHolder.AnchorPoint = Vector2.new(0.5,0.5)
+	PanelShadowHolder.Position = UDim2.new(0.5,0,0.5,0)
+	PanelShadowHolder.Size = UDim2.new(0,600,0,300)
+	local DropShadow = Instance.new("ImageLabel",PanelShadowHolder)
+	DropShadow.AnchorPoint = Vector2.new(0.5,0.5)
+	DropShadow.BackgroundTransparency = 1
+	DropShadow.Position = UDim2.new(0.5,0,0.5,0)
+	DropShadow.Size = UDim2.new(1,47,1,47)
+	DropShadow.Image = "rbxassetid://6014261993"
+	DropShadow.ImageColor3 = Color3.fromRGB(0,0,0)
+	DropShadow.ScaleType = Enum.ScaleType.Slice
+	DropShadow.SliceCenter = Rect.new(49,49,450,450)
+	DropShadow.ZIndex = 0
+	DropShadow.ImageTransparency = 0.5
+	local TopBar = Instance.new("Frame",Panel)
+	TopBar.BackgroundTransparency = 1
+	TopBar.Size = UDim2.new(1,0,0,20)
+	local IconHolder = Instance.new("Frame",TopBar)
+	IconHolder.BackgroundTransparency = 1
+	IconHolder.Size = UDim2.new(0,30,1,0)
+	local Icon = Instance.new("ImageLabel",IconHolder)
+	Icon.AnchorPoint = Vector2.new(0.5,0.5)
+	Icon.BackgroundTransparency = 1
+	Icon.Position = UDim2.new(0.5,0,0.5,0)
+	Icon.Size = UDim2.new(0.7,0,0.7,0)
+	Icon.Image = "rbxassetid://10507357657"
+	Icon.ImageColor3 = Color3.fromRGB(0, 252, 153)
+	local UIAspectRatio = Instance.new("UIAspectRatioConstraint",Icon)
+	local Title = Instance.new("TextLabel",TopBar)
+	Title.BackgroundTransparency = 1
+	Title.AnchorPoint = Vector2.new(0.5,0)
+	Title.Position = UDim2.new(0.5,0,0,0)
+	Title.Size = UDim2.new(0,545,1,0)
+	Title.Text = "AutoPaint 2"
+	Title.TextSize = 15
+	Title.TextColor3 = Color3.fromRGB(200,200,200)
+	Title.TextStrokeTransparency = 0.75
+	Title.Font = Enum.Font.SourceSans
+	Title.TextXAlignment = Enum.TextXAlignment.Left
+	local PageTitle = Instance.new("TextLabel",TopBar)
+	PageTitle.BackgroundTransparency = 1
+	PageTitle.AnchorPoint = Vector2.new(0.5,0)
+	PageTitle.Position = UDim2.new(0.5,0,0,0)
+	PageTitle.Size = UDim2.new(0,100,1,0)
+	PageTitle.Text = ""
+	PageTitle.TextSize = 15
+	PageTitle.TextColor3 = Color3.fromRGB(200,200,200)
+	PageTitle.TextStrokeTransparency = 0.75
+	PageTitle.Font = Enum.Font.SourceSans
+	local ExitButton = Instance.new("ImageButton",TopBar)
+	ExitButton.AnchorPoint = Vector2.new(1,0)
+	ExitButton.BackgroundTransparency = 1
+	ExitButton.Image = ''
+	ExitButton.Position = UDim2.new(1,0,0,0)
+	ExitButton.Size = UDim2.new(0,25,1,0)
+	local ExitButtonIcon = Instance.new("ImageLabel",ExitButton)
+	ExitButtonIcon.AnchorPoint = Vector2.new(0.5,0.5)
+	ExitButtonIcon.BackgroundTransparency = 1
+	ExitButtonIcon.Position = UDim2.new(0.5,0,0.5,0)
+	ExitButtonIcon.Size = UDim2.new(0.7,0,0.7,0)
+	ExitButtonIcon.Image = "rbxassetid://3926305904"
+	ExitButtonIcon.ImageColor3 = Color3.fromRGB(200,200,200)
+	ExitButtonIcon.ImageRectSize = Vector2.new(36,36)
+	ExitButtonIcon.ImageRectOffset = Vector2.new(924,724)
+	local UIAspectRatio = Instance.new("UIAspectRatioConstraint",ExitButtonIcon)
+	local BottomBar = Instance.new("Frame",Panel)
+	BottomBar.AnchorPoint = Vector2.new(0,1)
+	BottomBar.BackgroundTransparency = 1
+	BottomBar.Position = UDim2.new(0,0,1,0)
+	BottomBar.Size = UDim2.new(1,0,0,20)
+	local DotHolder = Instance.new("Frame",BottomBar)
+	DotHolder.BackgroundTransparency = 1
+	DotHolder.Size = UDim2.new(0,30,1,0)
+	local StatusDot = Instance.new("Frame",DotHolder)
+	StatusDot.AnchorPoint = Vector2.new(0.5,0.5)
+	StatusDot.BackgroundColor3 = Color3.fromRGB(255, 85, 142)
+	StatusDot.Position = UDim2.new(0.5,0,0.5,0)
+	StatusDot.Size = UDim2.new(0.3,0,0.3,0)
+	local UIAspectRatio = Instance.new("UIAspectRatioConstraint",StatusDot)
+	local UICorner = Instance.new("UICorner",StatusDot)
+	UICorner.CornerRadius = UDim.new(1,0)
+	local UIStroke = Instance.new("UIStroke",StatusDot)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local StatusText = Instance.new("TextLabel",BottomBar)
+	StatusText.BackgroundTransparency = 1
+	StatusText.AnchorPoint = Vector2.new(0,0.5)
+	StatusText.Position = UDim2.new(0,25,0.5,0)
+	StatusText.Size = UDim2.new(0,200,0.8,0)
+	StatusText.Text = "Painting: OFF"
+	StatusText.TextSize = 15
+	StatusText.TextColor3 = Color3.fromRGB(200,200,200)
+	StatusText.TextStrokeTransparency = 0.75
+	StatusText.Font = Enum.Font.SourceSans
+	StatusText.TextXAlignment = Enum.TextXAlignment.Left
+	local VersionText = Instance.new("TextLabel",BottomBar)
+	VersionText.BackgroundTransparency = 1
+	VersionText.AnchorPoint = Vector2.new(1,0.5)
+	VersionText.Position = UDim2.new(1,0,0.5,0)
+	VersionText.Size = UDim2.new(0,70,0.8,0)
+	VersionText.Text = "Version 2.0.0"
+	VersionText.TextSize = 15
+	VersionText.TextColor3 = Color3.fromRGB(200,200,200)
+	VersionText.TextStrokeTransparency = 0.75
+	VersionText.Font = Enum.Font.SourceSans
+	VersionText.TextXAlignment = Enum.TextXAlignment.Left
+	local MenuBar = Instance.new("Frame",Panel)
+	MenuBar.AnchorPoint = Vector2.new(0.5,0)
+	MenuBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	MenuBar.Position = UDim2.new(0.5,0,0,25)
+	MenuBar.Size = UDim2.new(0,590,0,20)
+	local UIListLayout = Instance.new("UIListLayout",MenuBar)
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+	local UICorner = Instance.new("UICorner",MenuBar)
+	UICorner.CornerRadius = UDim.new(0,4)
+	local UIStroke = Instance.new("UIStroke",MenuBar)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local SideBar = Instance.new("Frame",Panel)
+	SideBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	SideBar.Position = UDim2.new(0,5,0,50)
+	SideBar.Size = UDim2.new(0,30,0,225)
+	local UIListLayout = Instance.new("UIListLayout",SideBar)
+	local UICorner = Instance.new("UICorner",SideBar)
+	UICorner.CornerRadius = UDim.new(0,4)
+	local UIStroke = Instance.new("UIStroke",SideBar)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local Pages = Instance.new("Frame",Panel)
+	Pages.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	Pages.Position = UDim2.new(0,40,0,50)
+	Pages.Size = UDim2.new(0,555,0,225)
+	local UICorner = Instance.new("UICorner",Pages)
+	UICorner.CornerRadius = UDim.new(0,4)
+	local UIStroke = Instance.new("UIStroke",Pages)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	
+	local notificationsHolder = Instance.new("Frame",UI)
+	notificationsHolder.AnchorPoint = Vector2.new(0.5,0)
+	notificationsHolder.BackgroundTransparency = 1
+	notificationsHolder.Position = UDim2.new(0.5,10,0,10)
+	notificationsHolder.Size = UDim2.new(0,500,1,-20)
+	local UIListLayout = Instance.new("UIListLayout",notificationsHolder)
+	UIListLayout.Padding = UDim.new(0,5)
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	
+	local selectModeBarHolder = Instance.new("Frame",UI)
+	selectModeBarHolder.AnchorPoint = Vector2.new(0.5,0.5)
+	selectModeBarHolder.BackgroundTransparency = 1
+	selectModeBarHolder.Position = UDim2.new(0.1,0,0.5,0)
+	selectModeBarHolder.Size = UDim2.new(0,40,0,180)
+	selectModeBarHolder.Visible = false
+	local shadow = Instance.new("ImageLabel",selectModeBarHolder)
+	shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+	shadow.BackgroundTransparency = 1
+	shadow.AnchorPoint = Vector2.new(0.5,0.5)
+	shadow.Position = UDim2.new(0.5,0,0.5,0)
+	shadow.Size = UDim2.new(1,47,1,47)
+	shadow.Image = "rbxassetid://6014261993"
+	shadow.ImageTransparency = 0.5
+	shadow.ScaleType = Enum.ScaleType.Slice
+	shadow.SliceCenter = Rect.new(49,49,450,450)
+	local selectModeBar = Instance.new("Frame",selectModeBarHolder)
+	selectModeBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	selectModeBar.Size = UDim2.new(1,0,1,0)
+	local UICorner = Instance.new("UICorner",selectModeBar)
+	UICorner.CornerRadius = UDim.new(0,10)
+	local UIStroke = Instance.new("UIStroke",selectModeBar)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local UIListLayout = Instance.new("UIListLayout",selectModeBar)
+	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	UIListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	UIListLayout.Padding = UDim.new(0,5)
+	
+	local ContextMenu = Instance.new("Frame",UI)
+	ContextMenu.Visible = false
+	ContextMenu.Size = UDim2.new(0,100,0,0)
+	ContextMenu.BackgroundTransparency = 1
+	local UIListLayout = Instance.new("UIListLayout",ContextMenu)
+
+	local ToolTip = Instance.new("Frame",UI)
+	ToolTip.Visible = false
+	ToolTip.Size = UDim2.new(1,0,0,20)
+	ToolTip.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	ToolTip.AnchorPoint = Vector2.new(0,1)
+	local UICorner = Instance.new("UICorner",ToolTip)
+	UICorner.CornerRadius = UDim.new(0,2)
+	local UIStroke = Instance.new("UIStroke",ToolTip)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local ToolTipText = Instance.new("TextLabel",ToolTip)
+	ToolTipText.BackgroundTransparency = 1
+	ToolTipText.Size = UDim2.new(1,-10,1,0)
+	ToolTipText.Position = UDim2.new(0,5,0,0)
+	ToolTipText.Text = "New Selection"
+	ToolTipText.TextColor3 = Color3.fromRGB(200,200,200)
+	ToolTipText.TextStrokeTransparency = 0.75
+	ToolTipText.Font = Enum.Font.SourceSans
+	ToolTipText.TextSize = 16
+	ToolTipText.TextXAlignment = Enum.TextXAlignment.Left
+	ToolTip.Size = UDim2.new(0,ToolTipText.TextBounds.X+10,0,20)
+
+	-- Functions --
+
+	local function tween(object,tweenTime,property)
+		spawn(function()
+			local tween = TweenService:Create(object,TweenInfo.new(tweenTime),property)
+			tween:Play()
+			tween.Completed:Wait()
+			tween:Destroy()
+		end)
+	end
+	
+	local function newNotification(text,duration,color)
+		local notificationFrame = Instance.new("Frame",notificationsHolder)
+		notificationFrame.BackgroundTransparency = 1
+		notificationFrame.Size = UDim2.new(1,0,0,30)
+		notificationFrame.ClipsDescendants = true
+		local notification = Instance.new("Frame",notificationFrame)
+		notification.BackgroundColor3 = color
+		notification.Position = UDim2.new(0.5,0,-1,0)
+		notification.Size = UDim2.new(1,0,1,0)
+		local UICorner = Instance.new("UICorner",notification)
+		UICorner.CornerRadius = UDim.new(0,5)
+		local UIStroke = Instance.new("UIStroke",notification)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local textLabel = Instance.new("TextLabel",notification)
+		textLabel.Position = UDim2.new(0.5,0,0.5,0)
+		textLabel.AnchorPoint = Vector2.new(0.5,0.5)
+		textLabel.Size = UDim2.new(1,0,0.8,0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.Text = text
+		textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+		textLabel.TextStrokeTransparency = 0.75
+		textLabel.Font = Enum.Font.SourceSansBold
+		textLabel.TextScaled = true
+		--tween(notification,0.5,{AnchorPoint = Vector2.new(0,0)})
+		tween(notification,0.5,{Position = UDim2.new(0.5,0,0.5,0)})
+		wait(duration)
+		tween(notification,0.5,{Position = UDim2.new(0.5,0,-1,0)})
+		wait(0.5)
+		notificationFrame:Destroy()
+	end
+	
+	local function newContextMenuShortcut(text)
+		local shortcut = Instance.new("ImageButton",ContextMenu)
+		shortcut.Size = UDim2.new(1,0,0,20)
+		shortcut.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		local UIStroke = Instance.new("UIStroke",shortcut)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local textLabel = Instance.new("TextLabel",shortcut)
+		textLabel.Size = UDim2.new(1,0,1,0)
+		textLabel.Position = UDim2.new(0,5,0,0)
+		textLabel.BackgroundTransparency = 1
+		textLabel.Text = text
+		textLabel.TextColor3 = Color3.fromRGB(200,200,200)
+		textLabel.TextStrokeTransparency = 0.75
+		textLabel.Font = Enum.Font.SourceSans
+		textLabel.TextSize = 16
+		textLabel.TextXAlignment = Enum.TextXAlignment.Left
+		return shortcut
+	end
+	
+	local function clearContextMenuShortcuts()
+		for _,shortcut in pairs(ContextMenu:GetChildren()) do
+			if shortcut:IsA("ImageButton") then
+				shortcut:Destroy()
+			end
+ 		end
+	end
+	
+	local function paintPixel(chunk,pixel,color)
+		local args = {
+			[1] = workspace:WaitForChild("Chunks"):WaitForChild(chunk):WaitForChild(pixel),
+			[2] = tonumber(color)
+		}
+
+		game:GetService("ReplicatedStorage"):WaitForChild("Remotes"):WaitForChild("ChangeColor"):FireServer(unpack(args))
+	end
+	
+	local function addTooltip(UI,text)
+		UI.MouseEnter:Connect(function()
+			ToolTip.Visible = false
+			ToolTip.Size = UDim2.new(1,0,0,20)
+			ToolTipText.Text = text
+			ToolTip.Size = UDim2.new(0,ToolTipText.TextBounds.X+10,0,20)
+			ToolTip.Visible = true
+		end)
+		UI.MouseLeave:Connect(function()
+			ToolTip.Visible = false
+		end)
+	end
+
+	local function ButtonGlow(Shadow,Bar)
+		for _,v in pairs(Bar:GetChildren()) do
+			if v:IsA("Frame") then
+				tween(v.Button.Shadow,0.5,{BackgroundTransparency = 0.5})
+			end
+			if v:IsA("ImageButton") then
+				tween(v.Shadow,0.5,{BackgroundTransparency = 0.5})
+			end
+		end
+		tween(Shadow,0.5,{BackgroundTransparency = 1})
+	end
+
+	local function openPage(page)
+		for _,v in pairs(Pages:GetChildren()) do
+			if v:IsA("Frame") then
+				v.Visible = false
+			end
+		end
+		page.Visible = true
+		PageTitle.Text = page.Name
+	end
+
+	local function addMenuBarButton(buttonText)
+		local button = Instance.new("TextButton",MenuBar)
+		button.BackgroundTransparency = 1
+		button.Size = UDim2.new(0,50,1,0)
+		button.Text = buttonText
+		button.TextColor3 = Color3.fromRGB(200,200,200)
+		button.TextStrokeTransparency = 0.75
+		button.Font = Enum.Font.SourceSans
+		button.TextSize = 14
+		local UICorner = Instance.new("UICorner",button)
+		UICorner.CornerRadius = UDim.new(0,4)
+		local bar = Instance.new("Frame",button)
+		bar.AnchorPoint = Vector2.new(1,0)
+		bar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+		bar.Position = UDim2.new(1,0,0,0)
+		bar.Size = UDim2.new(0,1,1,0)
+		bar.BorderSizePixel = 0
+		return button
+	end
+
+	local function addSideBarButton(buttonIconImage,page)
+		local buttonHolder = Instance.new("Frame",SideBar)
+		buttonHolder.BackgroundTransparency = 1
+		buttonHolder.Size = UDim2.new(1,0,1,0)
+		addTooltip(buttonHolder,page.Name)
+		local UIAspectRatio = Instance.new("UIAspectRatioConstraint",buttonHolder)
+		local button = Instance.new("ImageButton",buttonHolder)
+		button.AnchorPoint = Vector2.new(0.5,0.5)
+		button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		button.Position = UDim2.new(0.5,0,0.5,0)
+		button.Size = UDim2.new(0.7,0,0.7,0)
+		button.Image = ""
+		button.AutoButtonColor = false
+		button.Name = "Button"
+		local UICorner = Instance.new("UICorner",button)
+		UICorner.CornerRadius = UDim.new(0,2)
+		local UIStroke = Instance.new("UIStroke",button)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local IconImage = Instance.new("ImageLabel",button)
+		IconImage.AnchorPoint = Vector2.new(0.5,0.5)
+		IconImage.BackgroundTransparency = 1
+		IconImage.Position = UDim2.new(0.5,0,0.5,0)
+		IconImage.Size = UDim2.new(0.8,0,0.8,0)
+		IconImage.Image = buttonIconImage
+		IconImage.ImageColor3 = Color3.fromRGB(0, 252, 153)
+		local Shadow = Instance.new("Frame",button)
+		Shadow.Size = UDim2.new(1,0,1,0)
+		Shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
+		Shadow.BackgroundTransparency = 0.5
+		Shadow.Name = "Shadow"
+		button.MouseButton1Down:Connect(function()
+			ButtonGlow(Shadow,SideBar)
+			openPage(page)
+		end)
+		return {["Button"] = button, ["Shadow"] = Shadow}
+	end
+
+	local function createNewPage(PageTitle)
+		local page = Instance.new("Frame",Pages)
+		page.BackgroundTransparency = 1
+		page.Size = UDim2.new(1,0,1,0)
+		page.Name = PageTitle
+		page.Visible = false
+		return page
+	end
+
+	local function newOptionButton(text,icon,color,page)
+		local button = Instance.new("ImageButton",page)
+		button.Size = UDim2.new(1,0,0.8,0)
+		button.BackgroundColor3 = Color3.fromRGB(62,62,62)
+		button.Image = ""
+		button.AutoButtonColor = false
+		local UICorner = Instance.new("UICorner",button)
+		UICorner.CornerRadius = UDim.new(0,2)
+		local UIStroke = Instance.new("UIStroke",button)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local textLabel = Instance.new("TextLabel",button)
+		textLabel.Name = "Title"
+		textLabel.BackgroundTransparency = 1
+		textLabel.Position = UDim2.new(0,20,0,0)
+		textLabel.Size = UDim2.new(1,0,1,0)
+		textLabel.Text = text
+		textLabel.TextColor3 = Color3.fromRGB(200,200,200)
+		textLabel.TextStrokeTransparency = 0.75
+		textLabel.Font = Enum.Font.SourceSans
+		textLabel.TextSize = 14
+		textLabel.TextXAlignment = Enum.TextXAlignment.Left
+		local imageLabelHolder = Instance.new("Frame",button)
+		imageLabelHolder.Name = "Holder"
+		imageLabelHolder.Size = UDim2.new(1,0,1,0)
+		imageLabelHolder.BackgroundTransparency = 1
+		local UIAspectRatio = Instance.new("UIAspectRatioConstraint",imageLabelHolder)
+		local imageLabel = Instance.new("ImageLabel",imageLabelHolder)
+		imageLabel.AnchorPoint = Vector2.new(0.5,0.5)
+		imageLabel.BackgroundTransparency = 1
+		imageLabel.Position = UDim2.new(0.5,0,0.5,0)
+		imageLabel.Size = UDim2.new(0.7,0,0.7,0)
+		imageLabel.ImageColor3 = color
+		button.Size = UDim2.new(0,20+5+textLabel.TextBounds.X,0.8,0)
+		if icon == tostring(icon) then
+			imageLabel.Image = icon
+		else
+			imageLabel.Image = icon.ID
+			imageLabel.ImageRectSize = icon.Size
+			imageLabel.ImageRectOffset = icon.Offset
+		end
+		return button
+	end
+
+	local function newSelectionTable(page)
+		
+		local newTable = table.clone(selectModeReturnTable)
+		
+		local SelectionTable = Instance.new("Frame",page)
+		SelectionTable.BackgroundColor3 = Color3.fromRGB(62,62,62)
+		SelectionTable.Size = UDim2.new(1,0,0,50)
+		SelectionTable.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton2 then
+				clearContextMenuShortcuts()
+				ContextMenu.Position = UDim2.new(0,mouse.X,0,mouse.Y)
+				ContextMenu.Visible = true
+				newContextMenuShortcut("Copy").MouseButton1Down:Connect(function()
+					setclipboard(HttpService:JSONEncode(newTable))
+				end)
+				newContextMenuShortcut("Delete").MouseButton1Down:Connect(function()
+					SelectionTable:Destroy()
+					page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
+				end)
+			end
+		end)
+		local UICorner = Instance.new("UICorner",SelectionTable)
+		UICorner.CornerRadius = UDim.new(0,2)
+		local UIStroke = Instance.new("UIStroke",SelectionTable)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local DeleteButton = Instance.new("ImageButton",SelectionTable)
+		DeleteButton.AnchorPoint = Vector2.new(1,0)
+		DeleteButton.BackgroundTransparency = 1
+		DeleteButton.Image = ''
+		DeleteButton.Position = UDim2.new(1,0,0,0)
+		DeleteButton.Size = UDim2.new(0,20,0,20)
+		local DeleteButtonIcon = Instance.new("ImageLabel",DeleteButton)
+		DeleteButtonIcon.AnchorPoint = Vector2.new(0.5,0.5)
+		DeleteButtonIcon.BackgroundTransparency = 1
+		DeleteButtonIcon.Position = UDim2.new(0.5,0,0.5,0)
+		DeleteButtonIcon.Size = UDim2.new(0.7,0,0.7,0)
+		DeleteButtonIcon.Image = "rbxassetid://3926305904"
+		DeleteButtonIcon.ImageColor3 = Color3.fromRGB(200,200,200)
+		DeleteButtonIcon.ImageRectSize = Vector2.new(36,36)
+		DeleteButtonIcon.ImageRectOffset = Vector2.new(924,724)
+		local SelectionTitle = Instance.new("TextLabel",SelectionTable)
+		SelectionTitle.BackgroundTransparency = 1
+		SelectionTitle.Position = UDim2.new(0,25,0,5)
+		SelectionTitle.Size = UDim2.new(1,0,0,15)
+		SelectionTitle.Text = "New Selection"
+		SelectionTitle.TextColor3 = Color3.fromRGB(200,200,200)
+		SelectionTitle.TextStrokeTransparency = 0.75
+		SelectionTitle.Font = Enum.Font.SourceSans
+		SelectionTitle.TextSize = 16
+		SelectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+		local TitleIcon = Instance.new("Frame",SelectionTable)
+		TitleIcon.BackgroundTransparency = 1
+		TitleIcon.Position = UDim2.new(0,2,0,2)
+		TitleIcon.Size = UDim2.new(0,20,0,20)
+		local Icon = Instance.new("ImageLabel",TitleIcon)
+		Icon.AnchorPoint = Vector2.new(0.5,0.5)
+		Icon.BackgroundTransparency = 1
+		Icon.Position = UDim2.new(0.5,0,0.5,0)
+		Icon.Size = UDim2.new(0.8,0,0.8,0)
+		Icon.Image = "rbxassetid://9086582404"
+		Icon.ImageColor3 = Color3.fromRGB(157, 184, 255)
+		local InnerBox = Instance.new("Frame",SelectionTable)
+		InnerBox.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		InnerBox.Position = UDim2.new(0,5,0,25)
+		InnerBox.Size = UDim2.new(1,-10,0,20)
+		local UICorner = Instance.new("UICorner",InnerBox)
+		UICorner.CornerRadius = UDim.new(0,2)
+		local UIStroke = Instance.new("UIStroke",InnerBox)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local TableIcon = Instance.new("TextLabel",InnerBox)
+		TableIcon.BackgroundTransparency = 1
+		TableIcon.Position = UDim2.new(0,3,0,5)
+		TableIcon.Size = UDim2.new(0,15,0,10)
+		TableIcon.Text = "{ }"
+		TableIcon.TextColor3 = Color3.fromRGB(255, 135, 121)
+		TableIcon.Font = Enum.Font.SourceSans
+		TableIcon.TextSize = 16
+		
+		local TableText = Instance.new("TextLabel",InnerBox)
+		TableText.Position = UDim2.new(0,23,0,6)
+		TableText.Size = UDim2.new(1,0,0,10)
+		TableText.Text = tostring(newTable)
+		TableText.TextColor3 = Color3.fromRGB(200,200,200)
+		TableText.TextStrokeTransparency = 0.75
+		TableText.Font = Enum.Font.SourceSans
+		TableText.TextSize = 16
+		TableText.TextXAlignment = Enum.TextXAlignment.Left
+		TableText.BackgroundTransparency = 1
+		DeleteButton.MouseButton1Down:Connect(function()
+			SelectionTable:Destroy()
+			page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
+		end)
+		return newTable
+	end
+
+	local function newSettingsPage(page,settingsPageName)
+		local settingsPage = createNewPage(settingsPageName)
+		local UIListLayout = Instance.new("UIListLayout",settingsPage)
+		local button = Instance.new("TextButton",page)
+		button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		button.Size = UDim2.new(1,0,0,30)
+		button.BorderSizePixel = 0
+		button.Text = ""
+		local bar = Instance.new("Frame",button)
+		bar.AnchorPoint = Vector2.new(0,1)
+		bar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+		bar.Position = UDim2.new(0,0,1,0)
+		bar.Size = UDim2.new(1,0,0,1)
+		bar.BorderSizePixel = 0
+		local title = Instance.new("TextLabel",button)
+		title.BackgroundTransparency = 1
+		title.Position = UDim2.new(0,30,0,0)
+		title.Size = UDim2.new(1,0,1,0)
+		title.Text = settingsPageName
+		title.TextColor3 = Color3.fromRGB(200,200,200)
+		title.TextStrokeTransparency = 0.75
+		title.Font = Enum.Font.SourceSans
+		title.TextSize = 20
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.BackgroundTransparency = 1
+		local arrow = Instance.new("ImageLabel",button)
+		arrow.AnchorPoint = Vector2.new(1,0)
+		arrow.BackgroundTransparency = 1
+		arrow.Position = UDim2.new(1,-5,0,5)
+		arrow.Size = UDim2.new(0,20,0,20)
+		arrow.ImageColor3 = Color3.fromRGB(200,200,200)
+		arrow.Image = "rbxassetid://2418686949"
+		button.MouseButton1Down:Connect(function()
+			openPage(settingsPage)
+		end)
+		return settingsPage
+	end
+
+	local function newSetting(page,settingType,settingName,func)
+		if not page:FindFirstChildWhichIsA("UIPadding") then
+			local pad = Instance.new("UIPadding",page)
+			pad.PaddingTop = UDim.new(0,5)
+			pad.PaddingLeft = UDim.new(0,5)
+			pad.PaddingRight = UDim.new(0,5)
+			pad.PaddingBottom = UDim.new(0,5)
+		end
+		local setting = Instance.new("Frame",page)
+		setting.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		setting.Size = UDim2.new(1,0,0,25)
+		local UICorner = Instance.new("UICorner",setting)
+		UICorner.CornerRadius = UDim.new(0,2)
+		local UIStroke = Instance.new("UIStroke",setting)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local SettingTitle = Instance.new("TextLabel",setting)
+		SettingTitle.Position = UDim2.new(0,5,0,0)
+		SettingTitle.Size = UDim2.new(1,0,1,0)
+		SettingTitle.Text = settingName
+		SettingTitle.TextColor3 = Color3.fromRGB(200,200,200)
+		SettingTitle.TextStrokeTransparency = 0.75
+		SettingTitle.Font = Enum.Font.SourceSans
+		SettingTitle.TextSize = 16
+		SettingTitle.TextXAlignment = Enum.TextXAlignment.Left
+		SettingTitle.BackgroundTransparency = 1
+		if settingType == "Toggle" then
+			local switchBackground = Instance.new("Frame",setting)
+			switchBackground.AnchorPoint = Vector2.new(1,0)
+			switchBackground.Position = UDim2.new(1,-5,0,5)
+			switchBackground.Size = UDim2.new(0,32,1,-10)
+			switchBackground.BackgroundColor3 = Color3.fromRGB(237, 94, 137)
+			local UICorner = Instance.new("UICorner",switchBackground)
+			UICorner.CornerRadius = UDim.new(1,0)
+			local UIStroke = Instance.new("UIStroke",switchBackground)
+			UIStroke.Thickness = 1
+			UIStroke.Color = Color3.fromRGB(15,15,15)
+			local pad = Instance.new("UIPadding",switchBackground)
+			pad.PaddingTop = UDim.new(0,2)
+			pad.PaddingLeft = UDim.new(0,2)
+			pad.PaddingRight = UDim.new(0,2)
+			pad.PaddingBottom = UDim.new(0,2)
+			local switch = Instance.new("ImageButton",switchBackground)
+			switch.Size = UDim2.new(1,0,1,0)
+			switch.BackgroundColor3 = Color3.fromRGB(255,255,255)
+			switch.AutoButtonColor = false
+			local UIAspectRatio = Instance.new("UIAspectRatioConstraint",switch)
+			local UICorner = Instance.new("UICorner",switch)
+			UICorner.CornerRadius = UDim.new(1,0)
+		elseif settingType == "Prompt" then
+			local promptBackground = Instance.new("Frame",setting)
+			promptBackground.AnchorPoint = Vector2.new(1,0)
+			promptBackground.Position = UDim2.new(1,-5,0,5)
+			promptBackground.Size = UDim2.new(0,50,1,-10)
+			promptBackground.BackgroundColor3 = Color3.fromRGB(20,20,20)
+			promptBackground.ClipsDescendants = true
+			local UICorner = Instance.new("UICorner",promptBackground)
+			UICorner.CornerRadius = UDim.new(0,2)
+			local UIStroke = Instance.new("UIStroke",promptBackground)
+			UIStroke.Thickness = 1
+			UIStroke.Color = Color3.fromRGB(15,15,15)
+			local textBox = Instance.new("TextBox",promptBackground)
+			textBox.Position = UDim2.new(0,5,0,0)
+			textBox.Size = UDim2.new(1,0,1,0)
+			textBox.PlaceholderText = "Value"
+			textBox.Text = ""
+			textBox.TextColor3 = Color3.fromRGB(200,200,200)
+			textBox.TextStrokeTransparency = 0.75
+			textBox.Font = Enum.Font.SourceSans
+			textBox.TextSize = 12
+			textBox.TextXAlignment = Enum.TextXAlignment.Left
+			textBox.BackgroundTransparency = 1
+		elseif settingType == "Button" then
+			local button = Instance.new("TextButton",setting)
+			button.AnchorPoint = Vector2.new(1,0)
+			button.Position = UDim2.new(1,-5,0,5)
+			button.Size = UDim2.new(0,50,1,-10)
+			button.BackgroundColor3 = Color3.fromRGB(62,62,62)
+			button.Text = "Activate"
+			button.TextColor3 = Color3.fromRGB(200,200,200)
+			button.TextStrokeTransparency = 0.75
+			button.Font = Enum.Font.SourceSans
+			button.TextSize = 12
+			local UICorner = Instance.new("UICorner",button)
+			UICorner.CornerRadius = UDim.new(0,2)
+			local UIStroke = Instance.new("UIStroke",button)
+			UIStroke.Thickness = 1
+			UIStroke.Color = Color3.fromRGB(15,15,15)
+			UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		end
+	end
+	
+	local function addSelectModeButton(image,text,func)
+		local imageButton = Instance.new("ImageButton",selectModeBar)
+		imageButton.BackgroundColor3 = Color3.fromRGB(62,62,62)
+		imageButton.Size = UDim2.new(0,30,0,30)
+		imageButton.AutoButtonColor = false
+		imageButton.Name = "Button"
+		local UICorner = Instance.new("UICorner",imageButton)
+		UICorner.CornerRadius = UDim.new(0,5)
+		local UIStroke = Instance.new("UIStroke",imageButton)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local imageLabel = Instance.new("ImageLabel",imageButton)
+		imageLabel.BackgroundTransparency = 1
+		imageLabel.AnchorPoint = Vector2.new(0.5,0.5)
+		imageLabel.Position = UDim2.new(0.5,0,0.5,0)
+		imageLabel.Size = UDim2.new(0.8,0,0.8,0)
+		imageLabel.Image = image
+		local shadow = Instance.new("Frame",imageButton)
+		shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
+		shadow.BackgroundTransparency = 0.5
+		shadow.Size = UDim2.new(1,0,1,0)
+		shadow.Name = "Shadow"
+		local UICorner = Instance.new("UICorner",shadow)
+		UICorner.CornerRadius = UDim.new(0,5)
+		if text == "Confirm" then
+			imageButton.BackgroundColor3 = Color3.fromRGB(46, 199, 137)
+		end
+		imageButton.MouseButton1Down:Connect(function()
+			ButtonGlow(shadow,selectModeBar)
+			func()
+		end)
+		addTooltip(imageButton,text)
+	end
+	
+	local function update(input)
+		local delta = input.Position - dragStart
+		PanelHolder.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+
+	-- Script --
+	
+	mouse.Move:Connect(function()
+		ToolTip.Position = UDim2.new(0,mouse.X,0,mouse.Y)
+	end)
+
+	addMenuBarButton("File")
+	addMenuBarButton("Settings")
+	addMenuBarButton("Windows")
+
+	local Home = createNewPage("Home")
+	local PaintBot = createNewPage("PaintBot")
+	local Encoder = createNewPage("JSON Code Generator")
+	local Settings = createNewPage("Settings")
+
+	addSideBarButton("rbxassetid://6034798461",Home)
+	addSideBarButton("rbxassetid://10910211661",PaintBot)
+	addSideBarButton("rbxassetid://9405930424",Encoder)
+	addSideBarButton("rbxassetid://17824369869",Settings)
+
+	local PaintBotBar = Instance.new("Frame",PaintBot)
+	PaintBotBar.BackgroundTransparency = 1
+	PaintBotBar.Position = UDim2.new(0,5,0,5)
+	PaintBotBar.Size = UDim2.new(1,0,0,25)
+	local UIListLayout = Instance.new("UIListLayout",PaintBotBar)
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+	UIListLayout.Padding = UDim.new(0,5)
+	
+	local Executor = Instance.new("Frame",PaintBot)
+	Executor.BackgroundColor3 = Color3.fromRGB(32,32,32)
+	Executor.Position = UDim2.new(0,5,0,35)
+	Executor.Size = UDim2.new(0,545,0,185)
+	local UICorner = Instance.new("UICorner",Executor)
+	UICorner.CornerRadius = UDim.new(0,2)
+	local UIStroke = Instance.new("UIStroke",Executor)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local ExecutorScrollingFrame = Instance.new("ScrollingFrame",Executor)
+	ExecutorScrollingFrame.AnchorPoint = Vector2.new(0.5,0.5)
+	ExecutorScrollingFrame.BackgroundTransparency = 1
+	ExecutorScrollingFrame.Position = UDim2.new(0.5,0,0.5,0)
+	ExecutorScrollingFrame.Size = UDim2.new(1,-10,1,-10)
+	ExecutorScrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
+	ExecutorScrollingFrame.ScrollBarThickness = 5
+	ExecutorScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(0,0,0)
+	ExecutorScrollingFrame.BorderSizePixel = 0
+	local ExecutorTextBox = Instance.new("TextBox",ExecutorScrollingFrame)
+	ExecutorTextBox.BackgroundTransparency = 1
+	ExecutorTextBox.Size = UDim2.new(1,0,1,0)
+	ExecutorTextBox.PlaceholderText = "Enter your code here..."
+	ExecutorTextBox.TextColor3 = Color3.fromRGB(0, 255, 136)
+	ExecutorTextBox.TextSize = 12
+	ExecutorTextBox.Text = ""
+	ExecutorTextBox.TextXAlignment = Enum.TextXAlignment.Left
+	ExecutorTextBox.TextYAlignment = Enum.TextYAlignment.Top
+	ExecutorTextBox.Font = Enum.Font.Code
+	ExecutorTextBox.ClearTextOnFocus = false
+	ExecutorTextBox.MultiLine = true
+	
+	local enabled = false
+	local runButton = newOptionButton("Run",{["ID"] = "rbxassetid://6764432408",["Offset"] = Vector2.new(100,150),["Size"] = Vector2.new(50,50)},Color3.fromRGB(0, 255, 170),PaintBotBar)
+	runButton.MouseButton1Down:Connect(function()
+		enabled = not enabled
+		if enabled then
+			local s,e = pcall(function()
+				codeToRun = HttpService:JSONDecode(ExecutorTextBox.Text)
+			end)
+			if e then
+				warn(e)
+				enabled = false
+			end
+			if s then
+				StatusText.Text = "Painting: ON"
+				StatusDot.BackgroundColor3 = Color3.fromRGB(28, 214, 147)
+				runButton.Title.Text = "Stop"
+				runButton.Holder.ImageLabel.Image = "rbxassetid://3926305904"
+				runButton.Holder.ImageLabel.ImageRectSize = Vector2.new(36, 36)
+				runButton.Holder.ImageLabel.ImageRectOffset = Vector2.new(124, 724)
+				runButton.Holder.ImageLabel.ImageColor3 = Color3.fromRGB(255, 80, 134)
+				runButton.Size = UDim2.new(0,20+5+runButton.Title.TextBounds.X,0.8,0)
+			end
+		else
+			StatusText.Text = "Painting: OFF"
+			StatusDot.BackgroundColor3 = Color3.fromRGB(255, 85, 142)
+			runButton.Title.Text = "Run"
+			runButton.Holder.ImageLabel.Image = "rbxassetid://6764432408"
+			runButton.Holder.ImageLabel.ImageRectSize = Vector2.new(50,50)
+			runButton.Holder.ImageLabel.ImageRectOffset = Vector2.new(100,150)
+			runButton.Holder.ImageLabel.ImageColor3 = Color3.fromRGB(0, 255, 170)
+			runButton.Size = UDim2.new(0,20+5+runButton.Title.TextBounds.X,0.8,0)
+			
+			codeToRun = nil
+		end
+	end)
+	local clearButton = newOptionButton("Clear",{["ID"] = "rbxassetid://6764432408",["Offset"] = Vector2.new(50, 300),["Size"] = Vector2.new(50,50)},Color3.fromRGB(244, 85, 136),PaintBotBar)
+	clearButton.MouseButton1Down:Connect(function()
+		ExecutorTextBox.Text = ""
+	end)
+	local copyButton = newOptionButton("Copy",{["ID"] = "rbxassetid://3926305904",["Offset"] = Vector2.new(244, 924),["Size"] = Vector2.new(36,36)},Color3.fromRGB(255, 204, 63),PaintBotBar)
+	copyButton.MouseButton1Down:Connect(function()
+		setclipboard(ExecutorTextBox.Text)
+	end)
+	--newOptionButton("Paste",{["ID"] = "rbxassetid://3926307971",["Offset"] = Vector2.new(164,324),["Size"] = Vector2.new(36,36)},Color3.fromRGB(210, 159, 103),PaintBotBar)
+	newOptionButton("Logs",{["ID"] = "rbxassetid://3926305904",["Offset"] = Vector2.new(644, 364),["Size"] = Vector2.new(36,36)},Color3.fromRGB(200,200,200),PaintBotBar)
+
+	local EncoderBar = Instance.new("Frame",Encoder)
+	EncoderBar.BackgroundTransparency = 1
+	EncoderBar.Position = UDim2.new(0,5,0,5)
+	EncoderBar.Size = UDim2.new(1,0,0,25)
+	local UIListLayout = Instance.new("UIListLayout",EncoderBar)
+	UIListLayout.FillDirection = Enum.FillDirection.Horizontal
+	UIListLayout.Padding = UDim.new(0,5)
+	local CodeGenerator = Instance.new("Frame",Encoder)
+	CodeGenerator.BackgroundColor3 = Color3.fromRGB(32,32,32)
+	CodeGenerator.Position = UDim2.new(0,5,0,35)
+	CodeGenerator.Size = UDim2.new(0,545,0,185)
+	local UICorner = Instance.new("UICorner",CodeGenerator)
+	UICorner.CornerRadius = UDim.new(0,2)
+	local UIStroke = Instance.new("UIStroke",CodeGenerator)
+	UIStroke.Thickness = 1
+	UIStroke.Color = Color3.fromRGB(15,15,15)
+	local CodeGeneratorScrollingFrame = Instance.new("ScrollingFrame",CodeGenerator)
+	CodeGeneratorScrollingFrame.AnchorPoint = Vector2.new(0.5,0.5)
+	CodeGeneratorScrollingFrame.BackgroundTransparency = 1
+	CodeGeneratorScrollingFrame.Position = UDim2.new(0.5,0,0.5,0)
+	CodeGeneratorScrollingFrame.Size = UDim2.new(1,-10,1,-10)
+	CodeGeneratorScrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
+	CodeGeneratorScrollingFrame.ScrollBarThickness = 5
+	CodeGeneratorScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(0,0,0)
+	CodeGeneratorScrollingFrame.BorderSizePixel = 0
+	CodeGeneratorScrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+	local UIListLayout = Instance.new("UIListLayout",CodeGeneratorScrollingFrame)
+	UIListLayout.Padding = UDim.new(0,5)
+	
+	local createButton = newOptionButton("Create",{["ID"] = "rbxassetid://3926305904",["Offset"] = Vector2.new(164, 924),["Size"] = Vector2.new(36,36)},Color3.fromRGB(255, 255, 255),EncoderBar)
+	createButton.MouseButton1Down:Connect(function()
+		PanelHolder.Visible = false
+		selectModeBarHolder.Visible = true
+	end)
+	local encoderClearButton = newOptionButton("Clear",{["ID"] = "rbxassetid://6764432408",["Offset"] = Vector2.new(50, 300),["Size"] = Vector2.new(50,50)},Color3.fromRGB(244, 85, 136),EncoderBar)
+	encoderClearButton.MouseButton1Down:Connect(function()
+		for _,selectionTable in pairs(CodeGeneratorScrollingFrame:GetChildren()) do
+			if selectionTable:IsA("Frame") then
+				selectionTable:Destroy()
+			end
+		end
+		CodeGeneratorScrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
+	end)
+
+	local UIListLayout = Instance.new("UIListLayout",Settings)
+	local cps = newSettingsPage(Settings,"Color Place Settings")
+	local ps = newSettingsPage(Settings,"Panel Settings")
+	local pbs = newSettingsPage(Settings,"PaintBot Settings")
+	local cgs = newSettingsPage(Settings,"Code Generator Settings")
+	local afks = newSettingsPage(Settings,"AFK Settings")
+	local ms = newSettingsPage(Settings,"Misc Settings")
+
+	newSetting(cps,"Prompt","Test",function()
+		
+	end)
+	
+	newSetting(cps,"Toggle","Test",function()
+
+	end)
+	
+	newSetting(cps,"Button","Test",function()
+
+	end)
+	
+	addSelectModeButton("rbxassetid://16081386298","Mouse Select",function()
+		for _,mode in pairs(selectModes) do mode = false end
+		selectModes.Click = true
+	end)
+	addSelectModeButton("rbxassetid://15330618083","Brush",function()
+		for _,mode in pairs(selectModes) do mode = false end
+		selectModes.Brush = true
+	end)
+	addSelectModeButton("rbxassetid://378475097","Selection Box",function()
+		for _,mode in pairs(selectModes) do mode = false end
+		selectModes.Box = true
+	end)
+	addSelectModeButton("rbxassetid://12623720992","Upload picture",function()
+		for _,mode in pairs(selectModes) do mode = false end
+		selectModes.Picture = true
+	end)
+	addSelectModeButton("rbxassetid://8747547110","Confirm",function()
+		for _,mode in pairs(selectModes) do mode = false end
+		selectModeBarHolder.Visible = false
+		PanelHolder.Visible = true
+		highlightFolder:ClearAllChildren()
+		newSelectionTable(CodeGeneratorScrollingFrame)
+		CodeGeneratorScrollingFrame.CanvasSize = UDim2.new(0,0,0,(#CodeGeneratorScrollingFrame:GetChildren()-1)*55-5)
+	end)
+	
+	TopBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = PanelHolder.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	TopBar.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+	
+	UserInputService.InputBegan:Connect(function(input)
+		if input.UserInputType ==Enum.UserInputType.MouseButton1 then
+			ContextMenu.Visible = false
+		end
+	end)
+	
+	mouse.Button1Down:Connect(function()
+		holding = true
+		if selectModes.Click then
+			local target = mouse.Target
+			if target and target.Parent.Parent.Name == "Chunks" then
+				local clone = target:Clone()
+				clone.Position -= Vector3.new(0,0.01,0)
+				clone.Parent = highlightFolder
+				selectedColor = 1
+				for _,frame in pairs(player.PlayerGui.PlacePane.PlacePane.wrapper.container.ColorSelection.wrapper.contents:GetChildren()) do
+					if frame.Name == "ColorButton" then
+						if math.round(frame.wrapper.container.inner.Size.X.Scale*100)/100 == 0.85 then
+							selectedColor = frame.LayoutOrder
+						end
+					end
+				end
+				
+				local newTable = {
+					["Chunk"] = target.Parent.Name,
+					["Pixel"] = target.Name,
+					["Color"] = selectedColor
+				}
+				if newTable then
+					table.insert(selectModeReturnTable,newTable)
+				end
+			end
+		end
+	end)
+	
+	mouse.Button1Up:Connect(function()
+		holding = false
+	end)
+	
+	ExitButton.MouseButton1Down:Connect(function()
+		UI:Destroy()
+		exit = true
+	end)
+	
+	spawn(function()
+		while wait() do
+			if exit then
+				break
+			end
+			if selectModes.Brush and holding then
+				print("painting")
+				local target = mouse.Target
+				if target and target.Parent.Parent.Name == "Chunks" then
+					local clone = target:Clone()
+					clone.Position -= Vector3.new(0,0.01,0)
+					clone.Parent = highlightFolder
+					selectedColor = 1
+					for _,frame in pairs(player.PlayerGui.PlacePane.PlacePane.wrapper.container.ColorSelection.wrapper.contents:GetChildren()) do
+						if frame.Name == "ColorButton" then
+							if math.round(frame.wrapper.container.inner.Size.X.Scale*100)/100 == 0.85 then
+								selectedColor = frame.LayoutOrder
+							end
+						end
+					end
+					local newTable = {
+						["Chunk"] = target.Parent.Name,
+						["Pixel"] = target.Name,
+						["Color"] = selectedColor
+					}
+					if newTable then
+						table.insert(selectModeReturnTable,newTable)
+					end
+				end
+			end
+		end
+	end)
+	
+	spawn(function()
+		while wait(1) do
+			if exit then
+				break
+			end
+			if codeToRun then
+				for _,data in pairs(codeToRun) do
+					paintPixel(data.Chunk,data.Pixel,data.Color)
+				end
+			end
+		end
+	end)
+	
+	newNotification("Panel has loaded!",3,Color3.fromRGB(0, 205, 101))
+end
