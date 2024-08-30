@@ -28,6 +28,10 @@ if _G.Enabled == nil then
 	local selectedColor = 1
 	local holding = false
 	local exit = false
+	
+	local contextLock = false
+	
+	local savedWindow = nil
 
 	local dragging,dragInput,dragstart,startPos
 	
@@ -226,7 +230,7 @@ if _G.Enabled == nil then
 	
 	local ContextMenu = Instance.new("Frame",UI)
 	ContextMenu.Visible = false
-	ContextMenu.Size = UDim2.new(0,100,0,0)
+	ContextMenu.Size = UDim2.new(0,150,0,0)
 	ContextMenu.BackgroundTransparency = 1
 	local UIListLayout = Instance.new("UIListLayout",ContextMenu)
 
@@ -266,6 +270,11 @@ if _G.Enabled == nil then
 	errorSound.SoundId = "rbxassetid://228910020"
 	errorSound.Volume = 1
 	errorSound.PlaybackSpeed = 1
+	
+	local s,e = pcall(function()
+		makefolder("PaintBot2")
+		makefolder("PaintBot2/SavedJSONs")
+	end)
 
 	-- Functions --
 
@@ -276,6 +285,124 @@ if _G.Enabled == nil then
 			tween.Completed:Wait()
 			tween:Destroy()
 		end)
+	end
+	
+	local function newWindow(size,title)
+		
+		local dragging = nil
+		local dragInput = nil
+		local dragstart = nil
+		local startPos = nil
+		
+		local windowHolder = Instance.new("Frame",UI)
+		windowHolder.Size = UDim2.new(1,0,1,0)
+		windowHolder.BackgroundTransparency = 1
+		local shadow = Instance.new("ImageLabel",windowHolder)
+		shadow.AnchorPoint = Vector2.new(0.5,0.5)
+		shadow.BackgroundTransparency = 1
+		shadow.Position = UDim2.new(0.5,0,0.5,0)
+		shadow.Size = UDim2.new(0,47+size.X.Offset,0,47+size.Y.Offset)
+		shadow.Image = "rbxassetid://6014261993"
+		shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+		shadow.ImageTransparency = 0.5
+		shadow.ScaleType = Enum.ScaleType.Slice
+		shadow.SliceCenter = Rect.new(49,49,450,450)
+		local window = Instance.new("Frame",windowHolder)
+		window.AnchorPoint = Vector2.new(0.5,0.5)
+		window.Position = UDim2.new(0.5,0,0.5,0)
+		window.Size = size
+		window.BackgroundColor3 = Color3.fromRGB(62, 62, 62)
+		local UICorner = Instance.new("UICorner",window)
+		UICorner.CornerRadius = UDim.new(0,10)
+		local UIStroke = Instance.new("UIStroke",window)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		local TopBar = Instance.new("Frame",window)
+		TopBar.BackgroundTransparency = 1
+		TopBar.Size = UDim2.new(1,0,0,20)
+		local IconHolder = Instance.new("Frame",TopBar)
+		IconHolder.Size = UDim2.new(0,30,1,0)
+		IconHolder.BackgroundTransparency = 1
+		local Icon = Instance.new("ImageLabel",IconHolder)
+		Icon.AnchorPoint = Vector2.new(0.5,0.5)
+		Icon.BackgroundTransparency = 1
+		Icon.Position = UDim2.new(0.5,0,0.5,0)
+		Icon.Size = UDim2.new(0.7,0,0.7,0)
+		Icon.Image = "rbxassetid://10507357657"
+		Icon.ImageColor3 = Color3.fromRGB(0, 252, 153)
+		local UIAspectRatio = Instance.new("UIAspectRatioConstraint",Icon)
+		local Title = Instance.new("TextLabel",TopBar)
+		Title.Position = UDim2.new(0.5,0,0.5,0)
+		Title.AnchorPoint = Vector2.new(0.5,0.5)
+		Title.Size = UDim2.new(0,size.X.Offset-55,1,0)
+		Title.BackgroundTransparency = 1
+		Title.Text = title
+		Title.TextColor3 = Color3.fromRGB(200,200,200)
+		Title.TextStrokeTransparency = 0.75
+		Title.Font = Enum.Font.SourceSans
+		Title.TextSize = 15
+		Title.TextXAlignment = Enum.TextXAlignment.Left
+		local ExitButton = Instance.new("ImageButton",TopBar)
+		ExitButton.AnchorPoint = Vector2.new(1,0)
+		ExitButton.BackgroundTransparency = 1
+		ExitButton.Position = UDim2.new(1,0,0,0)
+		ExitButton.Size = UDim2.new(0,25,1,0)
+		local exitIcon = Instance.new("ImageLabel",ExitButton)
+		exitIcon.AnchorPoint = Vector2.new(0.5,0.5)
+		exitIcon.BackgroundTransparency = 1
+		exitIcon.Position = UDim2.new(0.5,0,0.5,0)
+		exitIcon.Size = UDim2.new(0,14,0,14)
+		exitIcon.Image = "rbxassetid://3926305904"
+		exitIcon.ImageColor3 = Color3.fromRGB(200,200,200)
+		exitIcon.ImageRectOffset = Vector2.new(924,724)
+		exitIcon.ImageRectSize = Vector2.new(36,36)
+		local ClientArea = Instance.new("Frame",window)
+		ClientArea.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		ClientArea.Position = UDim2.new(0,5,0,25)
+		ClientArea.Size = UDim2.new(0,size.X.Offset-10,0,size.Y.Offset-30)
+		local UICorner = Instance.new("UICorner",ClientArea)
+		UICorner.CornerRadius = UDim.new(0,5)
+		local UIStroke = Instance.new("UIStroke",ClientArea)
+		UIStroke.Thickness = 1
+		UIStroke.Color = Color3.fromRGB(15,15,15)
+		
+		local function update(input)
+			local delta = input.Position - dragStart
+			windowHolder.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+		
+		TopBar.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+				dragStart = input.Position
+				startPos = windowHolder.Position
+
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragging = false
+					end
+				end)
+			end
+		end)
+
+		TopBar.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
+
+		UserInputService.InputChanged:Connect(function(input)
+			if input == dragInput and dragging then
+				update(input)
+			end
+		end)
+		
+		ExitButton.MouseButton1Down:Connect(function()
+			savedWindow = nil
+			windowHolder:Destroy()
+		end)
+		
+		return ClientArea
 	end
 	
 	local function newNotification(text,duration,color,warning)
@@ -510,31 +637,9 @@ if _G.Enabled == nil then
 		
 		local clicks = 0
 		
-		local SelectionTable = Instance.new("Frame",page)
-		
-		local function contextMenuPopUp()
-			clearContextMenuShortcuts()
-			ContextMenu.Position = UDim2.new(0,mouse.X,0,mouse.Y)
-			ContextMenu.Visible = true
-			newContextMenuShortcut("Copy").MouseButton1Down:Connect(function()
-				setclipboard(HttpService:JSONEncode(newTable))
-			end)
-			newContextMenuShortcut("Delete").MouseButton1Down:Connect(function()
-				SelectionTable:Destroy()
-				page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
-			end)
-		end
-		
+		local SelectionTable = Instance.new("Frame",page)	
 		SelectionTable.BackgroundColor3 = Color3.fromRGB(62,62,62)
 		SelectionTable.Size = UDim2.new(1,0,0,50)
-		SelectionTable.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				clicks += 1
-			end
-			if input.UserInputType == Enum.UserInputType.MouseButton2 then
-				contextMenuPopUp()
-			end
-		end)
 		local UICorner = Instance.new("UICorner",SelectionTable)
 		UICorner.CornerRadius = UDim.new(0,2)
 		local UIStroke = Instance.new("UIStroke",SelectionTable)
@@ -608,15 +713,65 @@ if _G.Enabled == nil then
 			SelectionTable:Destroy()
 			page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
 		end)
-		while wait(0.5) do
-			if exit then
-				break
+		
+		local function contextMenuPopUp()
+			clearContextMenuShortcuts()
+			ContextMenu.Position = UDim2.new(0,mouse.X,0,mouse.Y)
+			ContextMenu.Visible = true
+			newContextMenuShortcut("Copy").MouseButton1Down:Connect(function()
+				setclipboard(HttpService:JSONEncode(newTable))
+			end)
+			newContextMenuShortcut("Delete").MouseButton1Down:Connect(function()
+				SelectionTable:Destroy()
+				page.CanvasSize = UDim2.new(0,0,0,(#page:GetChildren()-1)*55-5)
+			end)
+			newContextMenuShortcut("Rename").MouseButton1Down:Connect(function()
+				local textBox = Instance.new("TextBox",SelectionTable)
+				textBox.ClearTextOnFocus = false
+				textBox.BackgroundTransparency = 0
+				textBox.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+				textBox.Position = UDim2.new(0,25,0,5)
+				textBox.Size = UDim2.new(0,200,0,15)
+				textBox.Text = SelectionTitle.Text
+				textBox.TextColor3 = Color3.fromRGB(200,200,200)
+				textBox.TextStrokeTransparency = 0.75
+				textBox.Font = Enum.Font.SourceSans
+				textBox.TextSize = 16
+				textBox.TextXAlignment = Enum.TextXAlignment.Left
+				textBox.FocusLost:Connect(function()
+					SelectionTitle.Text = textBox.Text
+					textBox:Destroy()
+				end)
+			end)
+			newContextMenuShortcut("Save").MouseButton1Down:Connect(function()
+				if SelectionTitle.Text ~= "New Selection" then
+					writefile("PaintBot2/SavedJSONs/"..SelectionTitle.Text..".txt",HttpService:JSONEncode(newTable))
+				else
+					newNotification("Rename Selection Table in order to save",3,Color3.fromRGB(207, 63, 57),true)
+				end
+			end)
+		end
+		
+		SelectionTable.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				clicks += 1
 			end
-			if clicks == 2 then
+			if input.UserInputType == Enum.UserInputType.MouseButton2 then
 				contextMenuPopUp()
 			end
-			clicks = 0
-		end
+		end)
+		
+		spawn(function()
+			while wait(0.5) do
+				if exit then
+					break
+				end
+				if clicks == 2 then
+					contextMenuPopUp()
+				end
+				clicks = 0
+			end
+		end)
 		return newTable
 	end
 
@@ -798,15 +953,16 @@ if _G.Enabled == nil then
 	mouse.Move:Connect(function()
 		ToolTip.Position = UDim2.new(0,mouse.X,0,mouse.Y)
 	end)
-
-	addMenuBarButton("File")
-	addMenuBarButton("Settings")
-	addMenuBarButton("Windows")
-
+	
 	local Home = createNewPage("Home")
 	local PaintBot = createNewPage("PaintBot")
 	local Encoder = createNewPage("JSON Code Generator")
 	local Settings = createNewPage("Settings")
+
+	local fileButton = addMenuBarButton("File")
+
+	addMenuBarButton("Settings")
+	addMenuBarButton("Windows")
 
 	addSideBarButton("rbxassetid://6034798461",Home)
 	addSideBarButton("rbxassetid://10910211661",PaintBot)
@@ -851,6 +1007,63 @@ if _G.Enabled == nil then
 	ExecutorTextBox.Font = Enum.Font.Code
 	ExecutorTextBox.ClearTextOnFocus = false
 	ExecutorTextBox.MultiLine = true
+	
+	fileButton.MouseButton1Down:Connect(function()
+		contextLock = true
+		clearContextMenuShortcuts()
+		ContextMenu.Position = UDim2.new(0,mouse.X,0,mouse.Y)
+		ContextMenu.Visible = true
+		newContextMenuShortcut("Restart UI")
+		newContextMenuShortcut("Open from File...").MouseButton1Down:Connect(function()
+			if savedWindow == nil then
+				local fileExplorer = newWindow(UDim2.new(0,300,0,300),"File Explorer")
+				savedWindow = fileExplorer
+				local scrollingFrame = Instance.new("ScrollingFrame",fileExplorer)
+				scrollingFrame.Size = UDim2.new(1,0,1,0)
+				scrollingFrame.ScrollBarThickness = 5
+				scrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+				scrollingFrame.BackgroundTransparency = 1
+				scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(0,0,0)
+				scrollingFrame.BorderSizePixel = 0
+				local UIListLayout = Instance.new("UIListLayout",scrollingFrame)
+				local function newButton(text)
+					local fileButton = Instance.new("ImageButton",scrollingFrame)
+					fileButton.BackgroundTransparency = 1
+					fileButton.Size = UDim2.new(1,0,0,35)
+					local bar = Instance.new("Frame",fileButton)
+					bar.AnchorPoint = Vector2.new(0,1)
+					bar.BackgroundColor3 = Color3.fromRGB(30,30,30)
+					bar.Position = UDim2.new(0,0,1,0)
+					bar.Size = UDim2.new(1,0,0,1)
+					bar.BorderSizePixel = 0
+					local textLabel = Instance.new("TextLabel",fileButton)
+					textLabel.BackgroundTransparency = 1
+					textLabel.Position = UDim2.new(0,10,0,0)
+					textLabel.Size = UDim2.new(1,0,1,0)
+					textLabel.Text = text
+					textLabel.TextColor3 = Color3.fromRGB(200,200,200)
+					textLabel.TextStrokeTransparency = 0.75
+					textLabel.Font = Enum.Font.SourceSans
+					textLabel.TextSize = 16
+					textLabel.TextXAlignment = Enum.TextXAlignment.Left
+					textLabel.BackgroundTransparency = 1
+					return fileButton
+				end
+				for _,file in pairs(listfiles("PaintBot2/SavedJSONs")) do
+					newButton(string.gsub(file,[[PaintBot2/SavedJSONs\]],"")).MouseButton1Down:Connect(function()
+						if savedWindow then
+							savedWindow.Parent.Parent:Destroy()
+							savedWindow = nil
+							ExecutorTextBox.Text = readfile(file)
+							openPage(PaintBot)
+						end
+					end)
+				end
+			end
+		end)
+		wait(0.1)
+		contextLock = false
+	end)
 	
 	local enabled = false
 	local runButton = newOptionButton("Run",{["ID"] = "rbxassetid://6764432408",["Offset"] = Vector2.new(100,150),["Size"] = Vector2.new(50,50)},Color3.fromRGB(0, 255, 170),PaintBotBar)
@@ -985,7 +1198,6 @@ if _G.Enabled == nil then
 	end)
 	addSelectModeButton("rbxassetid://8747547110","Confirm",function()
 		for key in pairs(selectModes) do selectModes[key] = false end
-		print(selectModes)
 		newNotification("Selection table has been made!",3,Color3.fromRGB(0, 205, 101))
 		selectModeBarHolder.Visible = false
 		PanelHolder.Visible = true
@@ -1022,7 +1234,9 @@ if _G.Enabled == nil then
 	
 	UserInputService.InputBegan:Connect(function(input)
 		if input.UserInputType ==Enum.UserInputType.MouseButton1 then
-			ContextMenu.Visible = false
+			if contextLock == false then
+				ContextMenu.Visible = false
+			end
 		end
 	end)
 	
