@@ -251,6 +251,21 @@ if _G.Enabled == nil then
 	ToolTipText.TextSize = 16
 	ToolTipText.TextXAlignment = Enum.TextXAlignment.Left
 	ToolTip.Size = UDim2.new(0,ToolTipText.TextBounds.X+10,0,20)
+	
+	local notificationSound = Instance.new("Sound",workspace)
+	notificationSound.SoundId = "rbxassetid://8486683243"
+	local switchSound = Instance.new("Sound",workspace)
+	switchSound.SoundId = "rbxassetid://4499400560"
+	switchSound.Volume = 1
+	switchSound.PlaybackSpeed = 0.75
+	local switchSound2 = Instance.new("Sound",workspace)
+	switchSound2.SoundId = "rbxassetid://4499400560"
+	switchSound2.Volume = 1
+	switchSound2.PlaybackSpeed = 1.25
+	local errorSound = Instance.new("Sound",workspace)
+	errorSound.SoundId = "rbxassetid://228910020"
+	errorSound.Volume = 1
+	errorSound.PlaybackSpeed = 1
 
 	-- Functions --
 
@@ -263,44 +278,52 @@ if _G.Enabled == nil then
 		end)
 	end
 	
-	local function newNotification(text,duration,color)
-		local notificationFrame = Instance.new("Frame",notificationsHolder)
-		notificationFrame.BackgroundTransparency = 1
-		notificationFrame.Size = UDim2.new(1,0,0,30)
-		notificationFrame.ClipsDescendants = true
-		local notification = Instance.new("Frame",notificationFrame)
-		notification.BackgroundColor3 = color
-		notification.AnchorPoint = Vector2.new(0.5,-1)
-		notification.Position = UDim2.new(0.5,0,-1,0)
-		notification.Size = UDim2.new(1,0,1,0)
-		local UICorner = Instance.new("UICorner",notification)
-		UICorner.CornerRadius = UDim.new(0,5)
-		local UIStroke = Instance.new("UIStroke",notification)
-		UIStroke.Thickness = 1
-		UIStroke.Color = Color3.fromRGB(15,15,15)
-		local textLabel = Instance.new("TextLabel",notification)
-		textLabel.Position = UDim2.new(0.5,0,0.5,0)
-		textLabel.AnchorPoint = Vector2.new(0.5,0.5)
-		textLabel.Size = UDim2.new(1,0,0.8,0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.Text = text
-		textLabel.TextColor3 = Color3.fromRGB(255,255,255)
-		textLabel.TextStrokeTransparency = 0.75
-		textLabel.Font = Enum.Font.SourceSansBold
-		textLabel.TextScaled = true
-		--tween(notification,0.5,{AnchorPoint = Vector2.new(0,0)})
-		tween(notification,0.5,{Position = UDim2.new(0.5,0,0.5,0)})
-		tween(notification,0.5,{AnchorPoint = Vector2.new(0.5,0.5)})
-		wait(duration)
-		tween(notification,0.5,{Position = UDim2.new(0.5,0,-1,0)})
-		wait(0.5)
-		notificationFrame:Destroy()
+	local function newNotification(text,duration,color,warning)
+		spawn(function()
+			local notificationFrame = Instance.new("Frame",notificationsHolder)
+			notificationFrame.BackgroundTransparency = 1
+			notificationFrame.Size = UDim2.new(1,0,0,30)
+			notificationFrame.ClipsDescendants = true
+			local notification = Instance.new("Frame",notificationFrame)
+			notification.BackgroundColor3 = color
+			notification.AnchorPoint = Vector2.new(0.5,-1)
+			notification.Position = UDim2.new(0.5,0,-1,0)
+			notification.Size = UDim2.new(1,-2,1,-2)
+			local UICorner = Instance.new("UICorner",notification)
+			UICorner.CornerRadius = UDim.new(0,5)
+			--local UIStroke = Instance.new("UIStroke",notification)
+			--UIStroke.Thickness = 1
+			--UIStroke.Color = Color3.fromRGB(15,15,15)
+			local textLabel = Instance.new("TextLabel",notification)
+			textLabel.Position = UDim2.new(0.5,0,0.5,0)
+			textLabel.AnchorPoint = Vector2.new(0.5,0.5)
+			textLabel.Size = UDim2.new(1,0,0.8,0)
+			textLabel.BackgroundTransparency = 1
+			textLabel.Text = text
+			textLabel.TextColor3 = Color3.fromRGB(255,255,255)
+			textLabel.TextStrokeTransparency = 0.75
+			textLabel.Font = Enum.Font.SourceSansBold
+			textLabel.TextScaled = true
+			--tween(notification,0.5,{AnchorPoint = Vector2.new(0,0)})
+			tween(notification,0.25,{Position = UDim2.new(0.5,0,0.5,0)})
+			tween(notification,0.25,{AnchorPoint = Vector2.new(0.5,0.5)})
+			if warning then
+				errorSound:Play()
+			else
+				notificationSound:Play()
+			end
+			wait(duration)
+			tween(notification,0.25,{Position = UDim2.new(0.5,0,-1,0)})
+			wait(0.15)
+			notificationFrame:Destroy()
+		end)
 	end
 	
 	local function newContextMenuShortcut(text)
 		local shortcut = Instance.new("ImageButton",ContextMenu)
 		shortcut.Size = UDim2.new(1,0,0,20)
 		shortcut.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		shortcut.AutoButtonColor = false
 		local UIStroke = Instance.new("UIStroke",shortcut)
 		UIStroke.Thickness = 1
 		UIStroke.Color = Color3.fromRGB(15,15,15)
@@ -365,6 +388,7 @@ if _G.Enabled == nil then
 				v.Visible = false
 			end
 		end
+		switchSound:Play()
 		page.Visible = true
 		PageTitle.Text = page.Name
 	end
@@ -751,10 +775,14 @@ if _G.Enabled == nil then
 		local UICorner = Instance.new("UICorner",shadow)
 		UICorner.CornerRadius = UDim.new(0,5)
 		if text == "Confirm" then
+			shadow.Visible = false
 			imageButton.BackgroundColor3 = Color3.fromRGB(46, 199, 137)
 		end
 		imageButton.MouseButton1Down:Connect(function()
 			ButtonGlow(shadow,selectModeBar)
+			if text ~= "Confirm" then
+				switchSound2:Play()
+			end
 			func()
 		end)
 		addTooltip(imageButton,text)
@@ -833,10 +861,11 @@ if _G.Enabled == nil then
 				codeToRun = HttpService:JSONDecode(ExecutorTextBox.Text)
 			end)
 			if e then
-				warn(e)
 				enabled = false
+				newNotification(e,3,Color3.fromRGB(207, 63, 57),true)
 			end
 			if s then
+				newNotification("Executed!",3,Color3.fromRGB(0, 205, 101))
 				StatusText.Text = "Painting: ON"
 				StatusDot.BackgroundColor3 = Color3.fromRGB(28, 214, 147)
 				runButton.Title.Text = "Stop"
@@ -847,6 +876,7 @@ if _G.Enabled == nil then
 				runButton.Size = UDim2.new(0,20+5+runButton.Title.TextBounds.X,0.8,0)
 			end
 		else
+			newNotification("Disabled!",3,Color3.fromRGB(0, 205, 101))
 			StatusText.Text = "Painting: OFF"
 			StatusDot.BackgroundColor3 = Color3.fromRGB(255, 85, 142)
 			runButton.Title.Text = "Run"
@@ -862,10 +892,12 @@ if _G.Enabled == nil then
 	local clearButton = newOptionButton("Clear",{["ID"] = "rbxassetid://6764432408",["Offset"] = Vector2.new(50, 300),["Size"] = Vector2.new(50,50)},Color3.fromRGB(244, 85, 136),PaintBotBar)
 	clearButton.MouseButton1Down:Connect(function()
 		ExecutorTextBox.Text = ""
+		newNotification("Code cleared!",3,Color3.fromRGB(0, 205, 101))
 	end)
 	local copyButton = newOptionButton("Copy",{["ID"] = "rbxassetid://3926305904",["Offset"] = Vector2.new(244, 924),["Size"] = Vector2.new(36,36)},Color3.fromRGB(255, 204, 63),PaintBotBar)
 	copyButton.MouseButton1Down:Connect(function()
 		setclipboard(ExecutorTextBox.Text)
+		newNotification("Copied to clipboard!",3,Color3.fromRGB(0, 205, 101))
 	end)
 	--newOptionButton("Paste",{["ID"] = "rbxassetid://3926307971",["Offset"] = Vector2.new(164,324),["Size"] = Vector2.new(36,36)},Color3.fromRGB(210, 159, 103),PaintBotBar)
 	newOptionButton("Logs",{["ID"] = "rbxassetid://3926305904",["Offset"] = Vector2.new(644, 364),["Size"] = Vector2.new(36,36)},Color3.fromRGB(200,200,200),PaintBotBar)
@@ -912,6 +944,7 @@ if _G.Enabled == nil then
 			end
 		end
 		CodeGeneratorScrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
+		newNotification("Tables cleared!",3,Color3.fromRGB(0, 205, 101))
 	end)
 
 	local UIListLayout = Instance.new("UIListLayout",Settings)
@@ -935,23 +968,25 @@ if _G.Enabled == nil then
 	end)
 	
 	addSelectModeButton("rbxassetid://16081386298","Mouse Select",function()
-		for _,mode in pairs(selectModes) do mode = false end
+		for key in pairs(selectModes) do selectModes[key] = false end
 		selectModes.Click = true
 	end)
 	addSelectModeButton("rbxassetid://15330618083","Brush",function()
-		for _,mode in pairs(selectModes) do mode = false end
+		for key in pairs(selectModes) do selectModes[key] = false end
 		selectModes.Brush = true
 	end)
 	addSelectModeButton("rbxassetid://378475097","Selection Box",function()
-		for _,mode in pairs(selectModes) do mode = false end
+		for key in pairs(selectModes) do selectModes[key] = false end
 		selectModes.Box = true
 	end)
 	addSelectModeButton("rbxassetid://12623720992","Upload picture",function()
-		for _,mode in pairs(selectModes) do mode = false end
+		for key in pairs(selectModes) do selectModes[key] = false end
 		selectModes.Picture = true
 	end)
 	addSelectModeButton("rbxassetid://8747547110","Confirm",function()
-		for _,mode in pairs(selectModes) do mode = false end
+		for key in pairs(selectModes) do selectModes[key] = false end
+		print(selectModes)
+		newNotification("Selection table has been made!",3,Color3.fromRGB(0, 205, 101))
 		selectModeBarHolder.Visible = false
 		PanelHolder.Visible = true
 		highlightFolder:ClearAllChildren()
@@ -1035,7 +1070,6 @@ if _G.Enabled == nil then
 				break
 			end
 			if selectModes.Brush and holding then
-				print("painting")
 				local target = mouse.Target
 				if target and target.Parent.Parent.Name == "Chunks" then
 					local clone = target:Clone()
