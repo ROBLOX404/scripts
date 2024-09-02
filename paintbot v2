@@ -1,4 +1,4 @@
-if _G.Enabled == nil then
+--if _G.Enabled == nil then
 
 	_G.Enabled = true
 
@@ -25,9 +25,12 @@ if _G.Enabled == nil then
 		["Picture"] = false,
 	}
 	local selectModeReturnTable = {}
+	local mods = {}
 	local selectedColor = 1
 	local holding = false
 	local exit = false
+	local startPosition = Vector3.new()
+	local pauseExecutor = false
 	
 	local contextLock = false
 	
@@ -255,6 +258,18 @@ if _G.Enabled == nil then
 	ToolTipText.TextSize = 16
 	ToolTipText.TextXAlignment = Enum.TextXAlignment.Left
 	ToolTip.Size = UDim2.new(0,ToolTipText.TextBounds.X+10,0,20)
+	
+	local selectionBox = Instance.new("Part",ReplicatedStorage)
+	selectionBox.Transparency = 1
+	selectionBox.Anchored = true
+	selectionBox.CanCollide = false
+	local texture = Instance.new("Texture",selectionBox)
+	texture.Color3 = Color3.fromRGB(82, 124, 174)
+	texture.StudsPerTileU = 4
+	texture.StudsPerTileV = 4
+	texture.Transparency = 0.5
+	texture.Texture = "rbxassetid://9734894135"
+	texture.Face = Enum.NormalId.Top
 	
 	local notificationSound = Instance.new("Sound",workspace)
 	notificationSound.SoundId = "rbxassetid://8486683243"
@@ -813,7 +828,7 @@ if _G.Enabled == nil then
 		return settingsPage
 	end
 
-	local function newSetting(page,settingType,settingName,func)
+	local function newSetting(page,settingType,settingName)
 		if not page:FindFirstChildWhichIsA("UIPadding") then
 			local pad = Instance.new("UIPadding",page)
 			pad.PaddingTop = UDim.new(0,5)
@@ -885,6 +900,7 @@ if _G.Enabled == nil then
 			textBox.TextSize = 12
 			textBox.TextXAlignment = Enum.TextXAlignment.Left
 			textBox.BackgroundTransparency = 1
+			return textBox
 		elseif settingType == "Button" then
 			local button = Instance.new("TextButton",setting)
 			button.AnchorPoint = Vector2.new(1,0)
@@ -1007,6 +1023,9 @@ if _G.Enabled == nil then
 	ExecutorTextBox.Font = Enum.Font.Code
 	ExecutorTextBox.ClearTextOnFocus = false
 	ExecutorTextBox.MultiLine = true
+	ExecutorTextBox.Changed:Connect(function()
+		ExecutorScrollingFrame.CanvasSize = UDim2.new(0,0,0,ExecutorTextBox.TextBounds.Y)
+	end)
 	
 	fileButton.MouseButton1Down:Connect(function()
 		contextLock = true
@@ -1112,7 +1131,9 @@ if _G.Enabled == nil then
 		setclipboard(ExecutorTextBox.Text)
 		newNotification("Copied to clipboard!",3,Color3.fromRGB(0, 205, 101))
 	end)
-	--newOptionButton("Paste",{["ID"] = "rbxassetid://3926307971",["Offset"] = Vector2.new(164,324),["Size"] = Vector2.new(36,36)},Color3.fromRGB(210, 159, 103),PaintBotBar)
+	newOptionButton("Paste",{["ID"] = "rbxassetid://3926307971",["Offset"] = Vector2.new(164,324),["Size"] = Vector2.new(36,36)},Color3.fromRGB(210, 159, 103),PaintBotBar).MouseButton1Down:Connect(function()
+		ExecutorTextBox.Text = getclipboard()
+	end)
 	newOptionButton("Logs",{["ID"] = "rbxassetid://3926305904",["Offset"] = Vector2.new(644, 364),["Size"] = Vector2.new(36,36)},Color3.fromRGB(200,200,200),PaintBotBar)
 
 	local EncoderBar = Instance.new("Frame",Encoder)
@@ -1168,16 +1189,11 @@ if _G.Enabled == nil then
 	local afks = newSettingsPage(Settings,"AFK Settings")
 	local ms = newSettingsPage(Settings,"Misc Settings")
 
-	newSetting(cps,"Prompt","Test",function()
-		
-	end)
+	local banlistPrompt = newSetting(cps,"Prompt","BanList")
 	
-	newSetting(cps,"Toggle","Test",function()
-
-	end)
-	
-	newSetting(cps,"Button","Test",function()
-
+	banlistPrompt.FocusLost:Connect(function()
+		table.clear(mods)
+		mods = string.split(banlistPrompt.Text,",")
 	end)
 	
 	addSelectModeButton("rbxassetid://16081386298","Mouse Select",function()
@@ -1242,6 +1258,7 @@ if _G.Enabled == nil then
 	
 	mouse.Button1Down:Connect(function()
 		holding = true
+		startPosition = mouse.hit.Position
 		if selectModes.Click then
 			local target = mouse.Target
 			if target and target.Parent.Parent.Name == "Chunks" then
@@ -1258,9 +1275,9 @@ if _G.Enabled == nil then
 				end
 				
 				local newTable = {
-					["Chunk"] = target.Parent.Name,
-					["Pixel"] = target.Name,
-					["Color"] = selectedColor
+					["ch"] = target.Parent.Name,
+					["p"] = target.Name,
+					["co"] = selectedColor
 				}
 				if newTable then
 					table.insert(selectModeReturnTable,newTable)
@@ -1275,6 +1292,7 @@ if _G.Enabled == nil then
 	
 	ExitButton.MouseButton1Down:Connect(function()
 		UI:Destroy()
+		_G.Enabled = nil
 		exit = true
 	end)
 	
@@ -1298,9 +1316,9 @@ if _G.Enabled == nil then
 						end
 					end
 					local newTable = {
-						["Chunk"] = target.Parent.Name,
-						["Pixel"] = target.Name,
-						["Color"] = selectedColor
+						["ch"] = target.Parent.Name,
+						["p"] = target.Name,
+						["co"] = selectedColor
 					}
 					if newTable then
 						table.insert(selectModeReturnTable,newTable)
@@ -1310,18 +1328,62 @@ if _G.Enabled == nil then
 		end
 	end)
 	
+	local bool = false
+	
+	spawn(function()
+		while wait() do
+			if holding and selectModes.Box then
+				local mousePos = mouse.Hit.Position
+				local roundedXPos = math.round(mousePos.X)
+				local roundedZPos = math.round(mousePos.Z)
+				selectionBox.Parent = workspace
+				selectionBox.Position = startPosition + Vector3.new(roundedXPos/2,-0.5,roundedZPos/2)
+				selectionBox.Size = Vector3.new((roundedXPos-startPosition.X),1,(roundedZPos-startPosition.Z))
+				bool = true
+			else
+				if bool then
+					for _,selectedParts in pairs(workspace:GetPartsInPart(selectionBox)) do
+						print(selectedParts)
+					end
+					bool = false
+				end
+				selectionBox.Parent = ReplicatedStorage
+			end
+		end
+	end)
+	
 	spawn(function()
 		while wait(1) do
 			if exit then
 				break
 			end
-			if codeToRun then
+			if codeToRun and pauseExecutor == false then
 				for _,data in pairs(codeToRun) do
-					paintPixel(data.Chunk,data.Pixel,data.Color)
+					wait(1)
+					paintPixel(data.ch,data.p,data.co)
 				end
 			end
 		end
 	end)
 	
+	spawn(function()
+		while wait(3) do
+			local modDetected = false
+			for _,player in pairs(game.Players:GetPlayers()) do
+				for _,mod in pairs(mods) do
+					if player.Name == mod then
+						print(mod)
+						modDetected = true
+					end
+				end
+			end
+			if modDetected then
+				pauseExecutor = true
+			else
+				pauseExecutor = false
+			end
+		end
+ 	end)
+	
 	newNotification("Panel has loaded!",3,Color3.fromRGB(0, 205, 101))
-end
+--end
