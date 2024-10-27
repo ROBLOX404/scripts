@@ -768,7 +768,7 @@ local function newSelectionTable(page)
 	end
 
 	SelectionTable.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch then
 			clicks += 1
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton2 then
