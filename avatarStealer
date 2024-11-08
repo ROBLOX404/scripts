@@ -1,3 +1,5 @@
+print(_G.UIscale)
+
 -- Values --
 
 local previewCamPos = Vector3.new(0, 2, -5)
