@@ -1,5 +1,3 @@
-print(_G.UIscale)
-
 -- Values --
 
 local previewCamPos = Vector3.new(0, 2, -5)
@@ -72,7 +70,7 @@ local panelHolder = Instance.new("Frame",holderFrame)
 panelHolder.AnchorPoint = Vector2.new(0,1)
 panelHolder.BackgroundTransparency = 1
 panelHolder.Position = UDim2.new(0.02,0,0.96,0)
-panelHolder.Size = UDim2.new(UIscale/100,0,UIscale/100,0)
+panelHolder.Size = UDim2.new(tonumber(UIscale)/100,0,tonumber(UIscale)/100,0)
 local shadowHolder = Instance.new("Frame",panelHolder)
 shadowHolder.Size = UDim2.new(1,0,1,0)
 shadowHolder.BackgroundTransparency = 1
