@@ -1,4 +1,4 @@
-return "a"
+return "hello world"
 
 function n(UIscale,CoreGui,CopyResult,URL)
 
