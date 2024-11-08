@@ -1,0 +1,363 @@
+-- Values --
+
+local previewCamPos = Vector3.new(0, 2, -5)
+local previewCamRot = Vector3.new(10, -180, 0)
+
+local layoutOrder = 0
+local canvasSize = 0
+local rig = nil
+
+local humanoidDescriptionTable = {
+	["Accessories"] = {
+		["Back"] = 0,
+		["Face"] = 0,
+		["Front"] = 0,
+		["Hair"] = 0,
+		["Hat"] = 0,
+		["Neck"] = 0,
+		["Shoulder"] = 0,
+		["Waist"] = 0,
+	},
+	["Animations"] = {
+		["Climb"] = 0,
+		["Fall"] = 0,
+		["Idle"] = 0,
+		["Jump"] = 0,
+		["Mood"] = 0,
+		["Run"] = 0,
+		["Swim"] = 0,
+		["Walk"] = 0,
+	},
+	["Body Parts"] = {
+		["Face"] = 0,
+		["Head"] = 0,
+		["Left Arm"] = 0,
+		["Left Leg"] = 0,
+		["Right Arm"] = 0,
+		["Right Leg"] = 0,
+		["Torso"] = 0,
+	},
+	["Clothes"] = {
+		["T-Shirt"] = 0,
+		["Pants"] = 0,
+		["Shirt"] = 0,
+	},
+	["Scale"] = {
+		["Body Type"] = 0,
+		["Depth"] = 0,
+		["Head"] = 0,
+		["Height"] = 0,
+		["Proportion"] = 0,
+		["Width"] = 0,
+	},
+}
+
+local player = game.Players.LocalPlayer
+local UI = Instance.new("ScreenGui")
+if CoreGui then
+	UI.Parent = game.CoreGui
+else
+	UI.Parent = player.PlayerGui
+end
+UI.ResetOnSpawn = false
+local holderFrame = Instance.new("Frame",UI)
+holderFrame.AnchorPoint = Vector2.new(0,1)
+holderFrame.BackgroundTransparency = 1
+holderFrame.Position = UDim2.new(0,0,1,0)
+holderFrame.Size = UDim2.new(1,0,1,0)
+local uiaspectratio = Instance.new("UIAspectRatioConstraint",holderFrame)
+local panelHolder = Instance.new("Frame",holderFrame)
+panelHolder.AnchorPoint = Vector2.new(0,1)
+panelHolder.BackgroundTransparency = 1
+panelHolder.Position = UDim2.new(0.02,0,0.96,0)
+panelHolder.Size = UDim2.new(UIscale/100,0,UIscale/100,0)
+local shadowHolder = Instance.new("Frame",panelHolder)
+shadowHolder.Size = UDim2.new(1,0,1,0)
+shadowHolder.BackgroundTransparency = 1
+local shadow = Instance.new("ImageLabel",shadowHolder)
+shadow.AnchorPoint = Vector2.new(0.5,0.5)
+shadow.BackgroundTransparency = 1
+shadow.Position = UDim2.new(0.5,0,0.5,0)
+shadow.Size = UDim2.new(1,47,1,47)
+shadow.Image = "rbxassetid://6014261993"
+shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+shadow.ImageTransparency = 0.5
+shadow.ScaleType= Enum.ScaleType.Slice
+shadow.SliceCenter = Rect.new(49,49,450,450)
+local panel = Instance.new("Frame",panelHolder)
+panel.BackgroundColor3 = Color3.fromRGB(37,37,37)
+panel.Size = UDim2.new(1,0,1,0)
+local corner = Instance.new("UICorner",panel)
+corner.CornerRadius = UDim.new(0,8)
+local listlayout = Instance.new("UIListLayout",panel)
+local stroke = Instance.new("UIStroke",panel)
+stroke.Color = Color3.fromRGB(60,60,60)
+local userInfoHolder = Instance.new("Frame",panel)
+userInfoHolder.BackgroundTransparency = 1
+userInfoHolder.Size = UDim2.new(0.5,0,0.3,0)
+local uiaspectratio = Instance.new("UIAspectRatioConstraint",userInfoHolder)
+local nameHolder = Instance.new("Frame",userInfoHolder)
+nameHolder.BackgroundTransparency = 1
+nameHolder.Position = UDim2.new(1,0,0,0)
+nameHolder.Size = UDim2.new(1,0,1,0)
+local listlayout = Instance.new("UIListLayout",nameHolder)
+listlayout.Padding = UDim.new(0.05,0)
+listlayout.VerticalAlignment = Enum.VerticalAlignment.Center
+local displayNameText = Instance.new("TextBox",nameHolder)
+displayNameText.BackgroundTransparency = 1
+displayNameText.Size = UDim2.new(2,0,0.2,0)
+displayNameText.Font = Enum.Font.Arimo
+displayNameText.Text = "Display Name"
+displayNameText.TextColor3 = Color3.fromRGB(255,255,255)
+displayNameText.TextXAlignment = Enum.TextXAlignment.Left
+displayNameText.TextScaled = true
+displayNameText.TextEditable = false
+displayNameText.ClearTextOnFocus = false
+local usernameText = Instance.new("TextBox",nameHolder)
+usernameText.BackgroundTransparency = 1
+usernameText.Size = UDim2.new(2,0,0.15,0)
+usernameText.Font = Enum.Font.Arimo
+usernameText.Text = "@username"
+usernameText.TextColor3 = Color3.fromRGB(200,200,200)
+usernameText.TextXAlignment = Enum.TextXAlignment.Left
+usernameText.TextScaled = true
+usernameText.TextEditable = false
+usernameText.ClearTextOnFocus = false
+local userIcon = Instance.new("ImageLabel",userInfoHolder)
+userIcon.AnchorPoint = Vector2.new(0.5,0.5)
+userIcon.BackgroundColor3 = Color3.fromRGB(33,33,33)
+userIcon.Position = UDim2.new(0.5,0,0.5,0)
+userIcon.Size = UDim2.new(0.8,0,0.8,0)
+userIcon.Image = "rbxassetid://12905962634"
+local corner = Instance.new("UICorner",userIcon)
+corner.CornerRadius = UDim.new(0,4)
+local stroke = Instance.new("UIStroke",userIcon)
+stroke.Color = Color3.fromRGB(60,60,60)
+local seperator = Instance.new("Frame",panel)
+seperator.BackgroundTransparency = 1
+seperator.Size = UDim2.new(1,0,0.01,0)
+local seperator = Instance.new("Frame",panel)
+seperator.BackgroundColor3 = Color3.fromRGB(60,60,60)
+seperator.BorderSizePixel = 0
+seperator.Size = UDim2.new(1,0,0,1)
+local avatarHolder = Instance.new("Frame",panel)
+avatarHolder.AnchorPoint = Vector2.new(0,0.5)
+avatarHolder.BackgroundTransparency = 1
+avatarHolder.Size = UDim2.new(0.3,0,0.53,0)
+local camera = Instance.new("Camera",avatarHolder)
+camera.CFrame = CFrame.new(previewCamPos) * CFrame.Angles(math.rad(previewCamRot.X),math.rad(previewCamRot.Y),math.rad(previewCamRot.Z))
+local viewportFrame = Instance.new("ViewportFrame",avatarHolder)
+viewportFrame.AnchorPoint = Vector2.new(0,0.5)
+viewportFrame.BackgroundColor3 = Color3.fromRGB(33,33,33)
+viewportFrame.Position = UDim2.new(0.1,0,0.55,0)
+viewportFrame.Size = UDim2.new(1,0,0.8,0)
+viewportFrame.CurrentCamera = camera
+local corner = Instance.new("UICorner",viewportFrame)
+corner.CornerRadius = UDim.new(0,4)
+local stroke = Instance.new("UIStroke",viewportFrame)
+stroke.Color = Color3.fromRGB(60,60,60)
+local title = Instance.new("TextLabel",viewportFrame)
+title.AnchorPoint = Vector2.new(0,1)
+title.BackgroundTransparency = 1
+title.Position = UDim2.new(0,0,-0.05,0)
+title.Size = UDim2.new(1,0,0.1,0)
+title.Text= "Preview"
+title.TextColor3 = Color3.fromRGB(200,200,200)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+local accessoryList = Instance.new("Frame",avatarHolder)
+accessoryList.AnchorPoint = Vector2.new(0,0.5)
+accessoryList.BackgroundColor3 = Color3.fromRGB(33,33,33)
+accessoryList.Position = UDim2.new(1.3,0,0.55,0)
+accessoryList.Size = UDim2.new(1.9,0,0.8,0)
+local corner = Instance.new("UICorner",accessoryList)
+corner.CornerRadius = UDim.new(0,4)
+local stroke = Instance.new("UIStroke",accessoryList)
+stroke.Color = Color3.fromRGB(60,60,60)
+local title = Instance.new("TextLabel",accessoryList)
+title.AnchorPoint = Vector2.new(0,1)
+title.BackgroundTransparency = 1
+title.Position = UDim2.new(0,0,-0.05,0)
+title.Size = UDim2.new(1,0,0.1,0)
+title.Text= "Copy IDs"
+title.TextColor3 = Color3.fromRGB(200,200,200)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+local scrollingFrame = Instance.new("ScrollingFrame",accessoryList)
+scrollingFrame.AnchorPoint = Vector2.new(0.5,0.5)
+scrollingFrame.BackgroundTransparency = 1
+scrollingFrame.Position = UDim2.new(0.5,0,0.5,0)
+scrollingFrame.Size = UDim2.new(0.9,0,0.9,0)
+scrollingFrame.ScrollBarThickness = 5
+scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(60,60,60)
+scrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+scrollingFrame.CanvasSize = UDim2.new(0,0,0,0)
+scrollingFrame.BorderSizePixel = 0
+local listlayout = Instance.new("UIListLayout",scrollingFrame)
+listlayout.Padding = UDim.new(0,5)
+listlayout.SortOrder = Enum.SortOrder.LayoutOrder
+local boxHolder = Instance.new("Frame",panel)
+boxHolder.BackgroundTransparency = 1
+boxHolder.Size = UDim2.new(1,0,0.15,0)
+local usernameBox = Instance.new("TextBox",boxHolder)
+usernameBox.AnchorPoint = Vector2.new(0.5,0.5)
+usernameBox.BackgroundColor3 = Color3.fromRGB(33,33,33)
+usernameBox.Position = UDim2.new(0.5,0,0.5,0)
+usernameBox.Size = UDim2.new(0.95,0,0.7,0)
+usernameBox.PlaceholderText = "Enter Username/Display Name..."
+usernameBox.TextColor3 = Color3.fromRGB(200,200,200)
+usernameBox.TextSize = 14
+usernameBox.Font = Enum.Font.SourceSans
+usernameBox.Text = ""
+usernameBox.PlaceholderColor3 = Color3.fromRGB(175,175,175)
+usernameBox.ClearTextOnFocus = false
+local corner = Instance.new("UICorner",usernameBox)
+corner.CornerRadius = UDim.new(0,4)
+local stroke = Instance.new("UIStroke",usernameBox)
+stroke.Color = Color3.fromRGB(60,60,60)
+stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+local exitButton = Instance.new("ImageButton",panelHolder)
+exitButton.AnchorPoint = Vector2.new(1,0)
+exitButton.BackgroundTransparency = 1
+exitButton.Position = UDim2.new(0.99,0,0.01,0)
+exitButton.Size = UDim2.new(0.05,0,0.05,0)
+exitButton.Image = "rbxassetid://7436812392"
+exitButton.ImageColor3 = Color3.fromRGB(200,200,200)
+
+-- Functions --
+
+-- Script --
+
+
+for main,description in pairs(humanoidDescriptionTable) do
+	local title = Instance.new("TextLabel",scrollingFrame)
+	title.BackgroundTransparency = 1
+	title.Size = UDim2.new(1,0,0,14)
+	title.Text = main
+	title.TextColor3 = Color3.fromRGB(255,255,255)
+	title.TextScaled = true
+	title.Font = Enum.Font.SourceSans
+	title.LayoutOrder = layoutOrder
+	layoutOrder += 1
+	canvasSize += 14+5
+	for name,value in pairs(description) do
+		local button = Instance.new("TextButton",scrollingFrame)
+		button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+		button.Size = UDim2.new(1,0,0,20)
+		button.Text = ""
+		button.AutoButtonColor = false
+		button.LayoutOrder = layoutOrder
+		layoutOrder += 1
+		canvasSize += 20+5
+		local corner = Instance.new("UICorner",button)
+		corner.CornerRadius = UDim.new(0,4)
+		local title = Instance.new("TextLabel",button)
+		title.AnchorPoint = Vector2.new(0.5,0.5)
+		title.BackgroundTransparency = 1
+		title.Position = UDim2.new(0.5,0,0.5,0)
+		title.Size = UDim2.new(0.9,0,0.5,0)
+		title.Text = "Copy "..name.." ID"
+		title.TextColor3 = Color3.fromRGB(255,255,255)
+		title.TextScaled = true
+		title.Font = Enum.Font.SourceSans
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		button.MouseButton1Down:Connect(function()
+			local msg = humanoidDescriptionTable[main][name]
+			if CopyResult then
+				if URL then
+					setclipboard("https://www.roblox.com/catalog/"..msg.."/")
+				else
+					setclipboard(msg)
+				end
+			else
+				if URL then
+					usernameBox.Text = "https://www.roblox.com/catalog/"..msg.."/"
+				else
+					usernameBox.Text = msg
+				end
+			end
+		end)
+	end
+end
+
+scrollingFrame.CanvasSize = UDim2.new(0,0,0,canvasSize)
+
+usernameBox.FocusLost:Connect(function(enterPressed)
+	print("--------")
+	print(enterPressed)
+	if enterPressed then
+		local input = string.lower(usernameBox.Text)
+		print(input)
+		for _,recipient in pairs(game.Players:GetPlayers()) do
+			print(recipient)
+			if recipient.Name:lower():match(input) or recipient.DisplayName:lower():match(input) then
+				print("found")
+				local char = recipient.Character
+				if char then
+					print("char exists")
+					local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+					local humanoidDescription = humanoid:FindFirstChildWhichIsA("HumanoidDescription")
+					if humanoid and humanoidDescription and humanoid.Health > 0 then
+						print("all good")
+						userIcon.Image = game.Players:GetUserThumbnailAsync(recipient.UserId,Enum.ThumbnailType.HeadShot,Enum.ThumbnailSize.Size420x420)
+						usernameText.Text = recipient.Name
+						displayNameText.Text = recipient.DisplayName
+						if rig then
+							rig:Destroy()
+							rig = nil
+						end
+						char.Archivable = true
+						local charClone = char:Clone()
+						rig = charClone
+						charClone.Parent = viewportFrame
+						charClone:PivotTo(CFrame.new(Vector3.new(0,0,0)))
+						char.Archivable = false
+						
+						humanoidDescriptionTable.Accessories["Back"] = humanoidDescription.BackAccessory
+						humanoidDescriptionTable.Accessories["Face"] = humanoidDescription.FaceAccessory
+						humanoidDescriptionTable.Accessories["Front"] = humanoidDescription.FrontAccessory
+						humanoidDescriptionTable.Accessories["Hair"] = humanoidDescription.HairAccessory
+						humanoidDescriptionTable.Accessories["Hat"] = humanoidDescription.HatAccessory
+						humanoidDescriptionTable.Accessories["Neck"] = humanoidDescription.NeckAccessory
+						humanoidDescriptionTable.Accessories["Shoulder"] = humanoidDescription.ShouldersAccessory
+						humanoidDescriptionTable.Accessories["Waist"] = humanoidDescription.WaistAccessory
+						
+						humanoidDescriptionTable.Animations["Climb"] = humanoidDescription.ClimbAnimation
+						humanoidDescriptionTable.Animations["Fall"] = humanoidDescription.FallAnimation
+						humanoidDescriptionTable.Animations["Idle"] = humanoidDescription.IdleAnimation
+						humanoidDescriptionTable.Animations["Jump"] = humanoidDescription.JumpAnimation
+						humanoidDescriptionTable.Animations["Mood"] = humanoidDescription.MoodAnimation
+						humanoidDescriptionTable.Animations["Run"] = humanoidDescription.RunAnimation
+						humanoidDescriptionTable.Animations["Swim"] = humanoidDescription.SwimAnimation
+						humanoidDescriptionTable.Animations["Walk"] = humanoidDescription.WalkAnimation
+						
+						humanoidDescriptionTable["Body Parts"]["Face"] = humanoidDescription.Face
+						humanoidDescriptionTable["Body Parts"]["Head"] = humanoidDescription.Head
+						humanoidDescriptionTable["Body Parts"]["Left Arm"] = humanoidDescription.LeftArm
+						humanoidDescriptionTable["Body Parts"]["Left Leg"] = humanoidDescription.LeftLeg
+						humanoidDescriptionTable["Body Parts"]["Right Arm"] = humanoidDescription.RightArm
+						humanoidDescriptionTable["Body Parts"]["Right Leg"] = humanoidDescription.RightLeg
+						humanoidDescriptionTable["Body Parts"]["Torso"] = humanoidDescription.Torso
+						
+						humanoidDescriptionTable.Clothes["T-Shirt"] = humanoidDescription.GraphicTShirt
+						humanoidDescriptionTable.Clothes["Pants"] = humanoidDescription.Pants
+						humanoidDescriptionTable.Clothes["Shirt"] = humanoidDescription.Shirt
+						
+						humanoidDescriptionTable.Scale["Body Type"] = humanoidDescription.BodyTypeScale
+						humanoidDescriptionTable.Scale["Depth"] = humanoidDescription.DepthScale
+						humanoidDescriptionTable.Scale["Head"] = humanoidDescription.Head
+						humanoidDescriptionTable.Scale["Height"] = humanoidDescription.HeightScale
+						humanoidDescriptionTable.Scale["Proportion"] = humanoidDescription.ProportionScale
+						humanoidDescriptionTable.Scale["Width"] = humanoidDescription.WidthScale
+						print("updated, enjoy")
+					end
+				end
+				break
+			end
+		end
+	end
+end)
+
+exitButton.MouseButton1Down:Connect(function()
+	UI:Destroy()
+end)
