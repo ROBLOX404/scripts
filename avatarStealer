@@ -275,7 +275,7 @@ for main,description in pairs(humanoidDescriptionTable) do
 				if URL then
 					setclipboard("https://www.roblox.com/catalog/"..msg.."/")
 				else
-					setclipboard(msg)
+					setclipboard(tostring(msg))
 				end
 			else
 				if URL then
