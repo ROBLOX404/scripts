@@ -1,6 +1,12 @@
-function n(UIscale,CoreGui,CopyResult,URL)
 
 -- Values --
+
+local settings = ...
+
+local UIscale = settings.UIscale
+local CoreGui = settings.CoreGui
+local CopyResult = settings.CopyResult
+local URL = settings.URL
 
 local previewCamPos = Vector3.new(0, 2, -5)
 local previewCamRot = Vector3.new(10, -180, 0)
@@ -363,5 +369,3 @@ end)
 exitButton.MouseButton1Down:Connect(function()
 	UI:Destroy()
 end)
-
-end
