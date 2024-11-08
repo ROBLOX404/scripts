@@ -1,4 +1,4 @@
-return
+return "a"
 
 function n(UIscale,CoreGui,CopyResult,URL)
 
