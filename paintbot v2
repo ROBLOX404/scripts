@@ -8,6 +8,7 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local highlightFolder = Instance.new("Model",workspace)
 local highlight = Instance.new("Highlight",workspace)
@@ -768,7 +769,7 @@ local function newSelectionTable(page)
 	end
 
 	SelectionTable.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or Enum.UserInputType.Touch then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			clicks += 1
 		end
 		if input.UserInputType == Enum.UserInputType.MouseButton2 then
@@ -781,8 +782,7 @@ local function newSelectionTable(page)
 			if exit then
 				break
 			end
-			if clicks >= 2 then
-				wait()
+			if clicks == 2 then
 				contextMenuPopUp()
 			end
 			clicks = 0
@@ -1207,6 +1207,7 @@ addSelectModeButton("rbxassetid://15330618083","Brush",function()
 end)
 addSelectModeButton("rbxassetid://378475097","Selection Box",function()
 	for key in pairs(selectModes) do selectModes[key] = false end
+	wait(0.5)
 	selectModes.Box = true
 end)
 addSelectModeButton("rbxassetid://12623720992","Upload picture",function()
@@ -1332,25 +1333,94 @@ end)
 local bool = false
 
 spawn(function()
-	while wait() do
-		if holding and selectModes.Box then
-			local mousePos = mouse.Hit.Position
-			local roundedXPos = math.round(mousePos.X)
-			local roundedZPos = math.round(mousePos.Z)
+	local startPoint
+	local dragging = false
+
+	UserInputService.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 and selectModes.Box then
+			dragging = true
 			selectionBox.Parent = workspace
-			selectionBox.Position = startPosition + Vector3.new(roundedXPos/2,-0.5,roundedZPos/2)
-			selectionBox.Size = Vector3.new((roundedXPos-startPosition.X),1,(roundedZPos-startPosition.Z))
-			bool = true
-		else
-			if bool then
-				for _,selectedParts in pairs(workspace:GetPartsInPart(selectionBox)) do
-					print(selectedParts)
-				end
-				bool = false
-			end
-			selectionBox.Parent = ReplicatedStorage
+			startPoint = mouse.Hit.Position
 		end
-	end
+	end)
+
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 and selectModes.Box then
+			dragging = false
+			selectionBox.Parent = game.ReplicatedStorage
+
+			local selectionRegion = Region3.new(
+				selectionBox.Position - selectionBox.Size / 2,
+				selectionBox.Position + selectionBox.Size / 2
+			)
+
+			local partsInRegion = workspace:FindPartsInRegion3(selectionRegion, nil, math.huge)
+
+			for _, target in pairs(partsInRegion) do
+				if target:IsA("BasePart") then
+					if target and target.Parent.Parent.Name == "Chunks" then
+						local clone = target:Clone()
+						clone.Position -= Vector3.new(0,0.01,0)
+						clone.Parent = highlightFolder
+						selectedColor = 1
+						for _,frame in pairs(player.PlayerGui.PlacePane.PlacePane.wrapper.container.ColorSelection.wrapper.contents:GetChildren()) do
+							if frame.Name == "ColorButton" then
+								if math.round(frame.wrapper.container.inner.Size.X.Scale*100)/100 == 0.85 then
+									selectedColor = frame.LayoutOrder
+								end
+							end
+						end
+						local newTable = {
+							["ch"] = target.Parent.Name,
+							["p"] = target.Name,
+							["co"] = selectedColor
+						}
+						if newTable then
+							table.insert(selectModeReturnTable,newTable)
+						end
+					end
+				end
+			end
+
+			selectionBox.Size = Vector3.new(0, 0, 0)
+		end
+	end)
+
+	RunService.RenderStepped:Connect(function()
+		if dragging and selectModes.Box then
+			local currentPoint = mouse.Hit.Position
+
+			local center = (startPoint + currentPoint) / 2
+			local size = Vector3.new(
+				math.abs(startPoint.X - currentPoint.X),
+				math.abs(startPoint.Y - currentPoint.Y),
+				math.abs(startPoint.Z - currentPoint.Z)
+			)
+
+			selectionBox.Position = center
+			selectionBox.Size = size
+		end
+	end)
+
+
+	--	if holding and selectModes.Box then
+	--		local mousePos = mouse.Hit.Position
+	--		local roundedXPos = math.round(mousePos.X)
+	--		local roundedZPos = math.round(mousePos.Z)
+	--		selectionBox.Parent = workspace
+	--		selectionBox.Position = startPosition + Vector3.new(roundedXPos/2,-0.5,roundedZPos/2)
+	--		selectionBox.Size = Vector3.new((roundedXPos-startPosition.X),1,(roundedZPos-startPosition.Z))
+	--		bool = true
+	--	else
+	--		if bool then
+	--			for _,selectedParts in pairs(workspace:GetPartsInPart(selectionBox)) do
+	--				print(selectedParts)
+	--			end
+	--			bool = false
+	--		end
+	--		selectionBox.Parent = ReplicatedStorage
+	--	end
+	--end
 end)
 
 spawn(function()
