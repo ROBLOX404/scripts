@@ -1442,17 +1442,18 @@ spawn(function()
 		end
 		if codeToRun and pauseExecutor == false then
 			for _,data in pairs(codeToRun) do
-				--wait(math.random(10,20)/10)
-				wait(0.1)
-				print("painted")
-				paintPixel(data.ch,data.p,data.co)
+				wait(1)
+				if codeToRun and pauseExecutor == false then
+					paintPixel(data.ch,data.p,data.co)
+				else
+					break
+				end
 			end
 		end
 	end
 end)
 
 spawn(function()
-   --[[
 	while wait(3) do
 		local modDetected = false
 		for _,player in pairs(game.Players:GetPlayers()) do
@@ -1469,7 +1470,6 @@ spawn(function()
 			pauseExecutor = false
 		end
 	end
-	]]
 end)
 
 newNotification("Panel has loaded!",3,Color3.fromRGB(0, 205, 101))
