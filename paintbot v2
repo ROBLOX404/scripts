@@ -9,6 +9,7 @@ local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local GuiService = game:GetService("GuiService")
 
 local highlightFolder = Instance.new("Model",workspace)
 local highlight = Instance.new("Highlight",workspace)
@@ -965,6 +966,17 @@ local function update(input)
 	PanelHolder.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 end
 
+local function isMouseOverGui()
+	local guiObjects = player:WaitForChild("PlayerGui"):GetGuiObjectsAtPosition(mouse.X, mouse.Y)
+	for _, guiObject in ipairs(guiObjects) do
+		-- Ignore invisible or fully transparent UI elements
+		if guiObject.Visible and guiObject.BackgroundTransparency < 1 then
+			return true
+		end
+	end
+	return false
+end
+
 -- Script --
 
 mouse.Move:Connect(function()
@@ -1337,7 +1349,7 @@ spawn(function()
 	local dragging = false
 
 	UserInputService.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 and selectModes.Box then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 and selectModes.Box and isMouseOverGui() == false then
 			dragging = true
 			selectionBox.Parent = workspace
 			startPoint = mouse.Hit.Position
@@ -1345,7 +1357,7 @@ spawn(function()
 	end)
 
 	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 and selectModes.Box then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 and selectModes.Box and isMouseOverGui() == false then
 			dragging = false
 			selectionBox.Parent = game.ReplicatedStorage
 
@@ -1387,7 +1399,7 @@ spawn(function()
 	end)
 
 	RunService.RenderStepped:Connect(function()
-		if dragging and selectModes.Box then
+		if dragging and selectModes.Box and isMouseOverGui() == false then
 			local currentPoint = mouse.Hit.Position
 
 			local center = (startPoint + currentPoint) / 2
