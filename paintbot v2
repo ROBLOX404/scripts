@@ -1442,7 +1442,8 @@ spawn(function()
 		end
 		if codeToRun and pauseExecutor == false then
 			for _,data in pairs(codeToRun) do
-				wait(math.random(10,20)/10)
+				--wait(math.random(10,20)/10)
+				wait(0.1)
 				print("painted")
 				paintPixel(data.ch,data.p,data.co)
 			end
