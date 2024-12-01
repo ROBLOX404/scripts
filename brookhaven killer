@@ -74,7 +74,7 @@ UserBox.FocusLost:Connect(function(enter)
 							wait(1)
 							deleteAllCars()
 							player.Character.PrimaryPart.Anchored = true
-							wait()
+							wait(0.25)
 							player.Character:PivotTo(originalCFrame)
 							player.Character.PrimaryPart.Anchored = false
 							break
