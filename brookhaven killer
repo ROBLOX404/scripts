@@ -1,0 +1,88 @@
+-- Values --
+
+local player = game.Players.LocalPlayer
+local UI = Instance.new("ScreenGui",player.PlayerGui)
+UI.ResetOnSpawn = false
+local UserBox = Instance.new("TextBox",UI)
+UserBox.AnchorPoint = Vector2.new(0.5,1)
+UserBox.BorderSizePixel = 5
+UserBox.BorderColor3 = Color3.fromRGB(0,0,0)
+UserBox.BackgroundColor3 = Color3.fromRGB(0,0,0)
+UserBox.Position = UDim2.new(0.5,0,1,-5)
+UserBox.Size = UDim2.new(0,300,0,20)
+UserBox.Font = Enum.Font.Code
+UserBox.PlaceholderText = "Enter player's username"
+UserBox.Text = ""
+UserBox.TextColor3 = Color3.fromRGB(255,255,255)
+UserBox.TextScaled = true
+
+local originalCFrame = CFrame.new()
+
+-- Function --
+
+local function spawnCar()
+	local args = {
+		[1] = "PickingCar",
+		[2] = "SmartCar"
+	}
+
+	game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1Ca1r"):FireServer(unpack(args))
+end
+
+local function deleteAllCars()
+	local args = {
+		[1] = "DeleteAllVehicles"
+	}
+
+	game:GetService("ReplicatedStorage"):WaitForChild("RE"):WaitForChild("1Ca1r"):FireServer(unpack(args))
+end
+
+local function lookForPassenger(car)
+	for _,seat in pairs(car:GetDescendants()) do
+		if seat:IsA("Seat") then
+			local occupant = seat.Occupant
+			if occupant and occupant.Parent ~= player.Character then
+				return occupant
+			end
+		end
+	end
+end
+
+-- Script --
+
+UserBox.FocusLost:Connect(function(enter)
+	local user = UserBox.Text
+	deleteAllCars()
+	if enter then
+		local char = player.Character
+		if char then
+			originalCFrame = char:GetPivot()
+			local humanoid = char:FindFirstChildWhichIsA("Humanoid")
+			if humanoid then
+				local recipient = nil
+				if game.Players:FindFirstChild(user) then
+					wait(0.25)
+					spawnCar()
+					local recipient = game.Players:FindFirstChild(user) :: Player
+					local car = workspace.Vehicles:WaitForChild(player.Name.."Car",5)
+					char:PivotTo(CFrame.new(car.Body.VehicleSeat.Position))
+					humanoid.Seated:Wait()
+					car:PivotTo(recipient.Character:GetPivot())
+					for i = 1,1000 do 
+						if lookForPassenger(car) then
+							car:PivotTo(CFrame.new(player.Character.PrimaryPart.Position - Vector3.new(0,150,0)))
+							wait(1)
+							deleteAllCars()
+							player.Character.PrimaryPart.Anchored = true
+							wait(1)
+							player.Character:PivotTo(originalCFrame)
+							player.Character.PrimaryPart.Anchored = false
+							break
+						end
+						wait()
+					end
+				end
+			end
+		end
+	end
+end)
