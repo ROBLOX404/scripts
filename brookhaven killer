@@ -70,11 +70,11 @@ UserBox.FocusLost:Connect(function(enter)
 					car:PivotTo(recipient.Character:GetPivot())
 					for i = 1,1000 do 
 						if lookForPassenger(car) then
-							car:PivotTo(CFrame.new(player.Character.PrimaryPart.Position - Vector3.new(0,150,0)))
+							car:PivotTo(CFrame.new(player.Character.PrimaryPart.Position - Vector3.new(0,100,0)))
 							wait(1)
 							deleteAllCars()
 							player.Character.PrimaryPart.Anchored = true
-							wait(0.25)
+							wait(0.5)
 							player.Character:PivotTo(originalCFrame)
 							player.Character.PrimaryPart.Anchored = false
 							break
